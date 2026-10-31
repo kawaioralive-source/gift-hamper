@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
     const { data: rawProducts, error, count } = await query;
 
-    if (!error && rawProducts && rawProducts.length > 0) {
+    if (!error && Array.isArray(rawProducts)) {
       let formattedProducts = rawProducts.map(formatProductRow);
 
       if (filters.min_price !== undefined) {
@@ -136,10 +136,10 @@ export async function GET(request: NextRequest) {
         formattedProducts.sort((a, b) => b.review_count - a.review_count);
       }
 
-      const total = count || formattedProducts.length;
+      const total = count != null ? count : formattedProducts.length;
       const paginated = formattedProducts.slice(from, to + 1);
 
-      return NextResponse.json({
+      const res = NextResponse.json({
         success: true,
         data: paginated,
         total,
@@ -147,6 +147,8 @@ export async function GET(request: NextRequest) {
         limit,
         total_pages: Math.ceil(total / limit) || 1,
       });
+      res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      return res;
     }
   } catch {
     // Fall back to SQLite if Supabase is unavailable

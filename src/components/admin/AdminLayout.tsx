@@ -11,6 +11,7 @@ import { useBrand } from '@/hooks/useBrand';
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/products', label: 'Products', icon: Package },
+  { href: '/admin/spooky-builder', label: '🎃 Spooky Builder', icon: Sparkles },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/admin/customers', label: 'Customers', icon: Users },
   { href: '/admin/corporate', label: 'Corporate Leads', icon: Building2 },

@@ -90,8 +90,8 @@ export function StoryHighlights() {
     async function loadCircularProducts() {
       try {
         const [prodRes, siteImagesRes] = await Promise.all([
-          fetch('/api/products?limit=12'),
-          fetch('/api/admin/site-images'),
+          fetch('/api/products?limit=12', { cache: 'no-store' }),
+          fetch('/api/admin/site-images', { cache: 'no-store' }),
         ]);
 
         let customConfig = null;

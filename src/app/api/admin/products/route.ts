@@ -98,17 +98,19 @@ export async function GET(request: NextRequest) {
       }
 
       const { data: products, error, count } = await query;
-      if (!error && products && products.length > 0) {
-        return NextResponse.json({
+      if (!error && Array.isArray(products)) {
+        const response = NextResponse.json({
           success: true,
           data: products.map(formatProductRowAdmin),
           pagination: {
             page,
             limit,
-            total: count || products.length,
-            total_pages: Math.ceil((count || products.length) / limit),
+            total: count != null ? count : products.length,
+            total_pages: Math.ceil((count != null ? count : products.length) / limit) || 1,
           },
         });
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        return response;
       }
     } catch {
       // Supabase failed, fall through to SQLite

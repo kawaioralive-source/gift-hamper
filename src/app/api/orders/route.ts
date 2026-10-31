@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
     const cookieStore = cookies();
     const body = await request.json();
 
-    const customer_name = sanitizeText(body.customer_name || user?.name || 'Valued Customer');
-    const customer_email = sanitizeEmail(body.customer_email || user?.email || 'customer@kawaiora.com');
-    const customer_phone = sanitizeText(body.customer_phone || user?.phone || '+919876543210');
+    const customer_name = sanitizeText(body.customer_name || user?.name || (user as any)?.full_name || 'Customer');
+    const customer_email = sanitizeEmail(body.customer_email || user?.email || '');
+    const customer_phone = sanitizeText(body.customer_phone || user?.phone || '');
     const recipient_name = sanitizeText(body.recipient_name || customer_name);
     const recipient_phone = sanitizeText(body.recipient_phone || customer_phone);
     const recipient_address = typeof body.recipient_address === 'string'

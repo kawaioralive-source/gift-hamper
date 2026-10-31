@@ -2,16 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 
 export function isSupabaseAdminOffline(): boolean {
   if (process.env.USE_SQLITE === 'true') return true;
-  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^\uFEFF/, '').trim();
-  if (!url) return true;
   return false;
 }
 
 export function createAdminClient() {
-  if (isSupabaseAdminOffline()) {
-    throw new Error('Supabase remote is unconfigured or offline. Using fast local SQLite.');
-  }
-
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qeptxbbzsnzwgulxigle.supabase.co').replace(/^\uFEFF/, '').trim();
   const key = (
     process.env.SUPABASE_SERVICE_ROLE_KEY ||

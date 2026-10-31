@@ -84,10 +84,10 @@ export function BestSellers() {
   const [bestsellers, setBestsellers] = useState(BEST_SELLERS);
 
   useEffect(() => {
-    fetch('/api/products?sort=popular&limit=4')
+    fetch('/api/products?sort=popular&limit=4', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.data && data.data.length > 0) {
+        if (data.success && Array.isArray(data.data)) {
           setBestsellers(
             data.data.slice(0, 4).map((p: any, idx: number) => ({
               id: String(p.id),

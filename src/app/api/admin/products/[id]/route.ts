@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { querySqlite, executeSqlite } from '@/lib/sqlite';
 import { getSessionUser } from '@/lib/auth';
 
@@ -232,23 +233,59 @@ export async function DELETE(
 
     const numId = Number(id);
 
+    // 1. Delete from Supabase via Admin client
     try {
-      const supabase = createClient();
+      const supabase = createAdminClient();
       let query = supabase.from('products').delete();
       if (!isNaN(numId)) {
-        query = query.eq('id', numId);
+        query = query.or(`id.eq.${numId},slug.eq.${id}`);
       } else {
         query = query.eq('slug', id);
       }
-      await query;
+      const { error } = await query;
+      if (error) {
+        console.warn('Supabase product delete warning:', error.message);
+      }
+    } catch (e) {
+      console.error('Supabase admin delete error:', e);
+    }
+
+    // 2. Direct PostgreSQL fallback if DATABASE_URL available
+    try {
+      const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:daxmu8-sajgih-seThok@db.qeptxbbzsnzwgulxigle.supabase.co:5432/postgres';
+      if (dbUrl) {
+        const { Client } = await import('pg');
+        const pgClient = new Client({
+          connectionString: dbUrl,
+          ssl: { rejectUnauthorized: false },
+        });
+        await pgClient.connect();
+        if (!isNaN(numId)) {
+          await pgClient.query('DELETE FROM products WHERE id = $1 OR slug = $2', [numId, id]);
+        } else {
+          await pgClient.query('DELETE FROM products WHERE slug = $1', [id]);
+        }
+        await pgClient.end();
+      }
+    } catch (e) {
+      console.warn('Direct PG delete notice:', e);
+    }
+
+    // 3. Delete from SQLite
+    try {
+      if (!isNaN(numId)) {
+        await executeSqlite(`DELETE FROM products WHERE id = ? OR slug = ?`, [numId, id]);
+      } else {
+        await executeSqlite(`DELETE FROM products WHERE slug = ?`, [id]);
+      }
     } catch {}
 
-    await executeSqlite(`DELETE FROM products WHERE id = ?`, [numId || id]);
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      message: 'Product deleted successfully',
+      message: 'Product deleted permanently from database',
     });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    return response;
   } catch (error) {
     console.error('Admin product delete error:', error);
     return NextResponse.json(

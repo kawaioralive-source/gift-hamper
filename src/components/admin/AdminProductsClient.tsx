@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, Plus, ChevronLeft, ChevronRight, Package, AlertTriangle, Eye, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { Search, Filter, Plus, ChevronLeft, ChevronRight, Package, AlertTriangle, Eye, Edit, Trash2, MoreHorizontal, Sparkles } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Modal } from '@/components/ui/Modal';
+import toast from 'react-hot-toast';
 
 interface Product {
   id: string;
@@ -101,7 +102,7 @@ export function AdminProductsClient() {
         ...(filters.low_stock && { low_stock: filters.low_stock }),
       });
 
-      const response = await fetch(`/api/admin/products?${params}`);
+      const response = await fetch(`/api/admin/products?${params}`, { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -146,10 +147,18 @@ export function AdminProductsClient() {
       if (response.ok) {
         setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
         setShowDeleteModal(false);
+        const deletedName = productToDelete.name;
         setProductToDelete(null);
+        toast.success(`"${deletedName}" permanently deleted from database`);
+        // Refresh product list from database immediately to verify state
+        setTimeout(() => fetchProducts(), 300);
+      } else {
+        const err = await response.json();
+        toast.error(err.error || 'Failed to delete product');
       }
     } catch (error) {
       console.error('Failed to delete product:', error);
+      toast.error('Network error deleting product');
     }
   };
 
@@ -321,7 +330,16 @@ export function AdminProductsClient() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Products</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">Manage products and inventory</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/spooky-builder">
+            <Button
+              variant="outline"
+              className="border-orange-500/40 text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500 shadow-sm"
+              leftIcon={<Sparkles className="w-4 h-4 text-orange-500 animate-pulse" />}
+            >
+              🎃 Spooky Builder Items
+            </Button>
+          </Link>
           <Button variant="outline" onClick={() => setShowFilters(!showFilters)} leftIcon={<Filter className="w-4 h-4" />}>
             Filters
           </Button>

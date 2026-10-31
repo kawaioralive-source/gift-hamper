@@ -79,23 +79,102 @@ export function CheckoutClient() {
   const [packagingType, setPackagingType] = useState('standard');
   const [paymentMethod, setPaymentMethod] = useState<'razorpay'>('razorpay');
 
-  // Address form state
+  // Address form state with empty default (no fake dummy data)
   const [addressForm, setAddressForm] = useState<AddressFormData>({
-    full_name: 'Priya Sharma',
-    phone: '+919876543210',
-    email: 'customer@kawaiora.com',
-    address_line_1: 'Flat 402, Royal Palms, Bandra West',
-    address_line_2: 'Hill Road',
-    city: 'Mumbai',
+    full_name: '',
+    phone: '',
+    email: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
     state: 'Maharashtra',
-    pincode: '400050',
-    landmark: 'Near Bandra Police Station',
+    pincode: '',
+    landmark: '',
     is_default: true,
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const validateAddressForm = (data: AddressFormData) => {
+    const errs: Record<string, string> = {};
+
+    const cleanName = data.full_name.trim();
+    if (!cleanName) {
+      errs.full_name = 'Full name is required for order delivery';
+    } else if (cleanName.length < 3) {
+      errs.full_name = 'Name must be at least 3 characters long';
+    } else if (!/^[a-zA-Z\s.'-]+$/.test(cleanName)) {
+      errs.full_name = 'Please enter a valid personal name (letters and spaces)';
+    }
+
+    const cleanPhone = data.phone.replace(/[\s\-\+]/g, '').replace(/^91/, '').replace(/^0/, '');
+    if (!cleanPhone) {
+      errs.phone = 'Mobile number is required for dispatch & OTP';
+    } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      errs.phone = 'Enter a valid 10-digit Indian mobile number (e.g. 9876543210)';
+    }
+
+    const cleanEmail = data.email.trim();
+    if (!cleanEmail) {
+      errs.email = 'Email address is required for order invoice & tracking';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      errs.email = 'Please enter a valid email address';
+    }
+
+    const cleanLine1 = data.address_line_1.trim();
+    if (!cleanLine1) {
+      errs.address_line_1 = 'House, Flat or Building name is required';
+    } else if (cleanLine1.length < 4) {
+      errs.address_line_1 = 'Please provide detailed house / building details';
+    }
+
+    const cleanLine2 = data.address_line_2.trim();
+    if (!cleanLine2) {
+      errs.address_line_2 = 'Street, Area, Colony or Road is required';
+    } else if (cleanLine2.length < 3) {
+      errs.address_line_2 = 'Please provide detailed street or area details';
+    }
+
+    const cleanCity = data.city.trim();
+    if (!cleanCity) {
+      errs.city = 'City or District is required';
+    } else if (cleanCity.length < 2) {
+      errs.city = 'Please enter a valid city name';
+    }
+
+    if (!data.state) {
+      errs.state = 'Please select a State / Union Territory';
+    }
+
+    const cleanPincode = data.pincode.trim();
+    if (!cleanPincode) {
+      errs.pincode = 'PIN Code is required';
+    } else if (!/^[1-9][0-9]{5}$/.test(cleanPincode)) {
+      errs.pincode = 'Enter a valid 6-digit Indian PIN Code (e.g. 400050)';
+    }
+
+    return errs;
+  };
 
   useEffect(() => {
     refreshCart();
     fetchAddresses();
+
+    // Autofill actual customer credentials from authenticated profile if logged in
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((meData) => {
+        if (meData.success && (meData.data || meData.user)) {
+          const u = meData.data || meData.user;
+          setAddressForm((prev) => ({
+            ...prev,
+            full_name: prev.full_name || u.full_name || u.name || '',
+            email: prev.email || u.email || '',
+            phone: prev.phone || u.phone || '',
+          }));
+        }
+      })
+      .catch(() => {});
+
     try {
       const stored = localStorage.getItem('kawaiora_discount');
       if (stored) {
@@ -119,6 +198,8 @@ export function CheckoutClient() {
           setAddresses(data.data);
           if (data.data.length > 0 && !selectedAddressId) {
             setSelectedAddressId(data.data.find((a: Address) => a.is_default)?.id || data.data[0].id);
+          } else if (data.data.length === 0) {
+            setShowAddressForm(true);
           }
         }
       }
@@ -127,8 +208,16 @@ export function CheckoutClient() {
     }
   };
 
-  const handleAddressSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddressSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    const errors = validateAddressForm(addressForm);
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      toast.error('Please complete all required customer and delivery details.');
+      return false;
+    }
+    setFormErrors({});
     
     try {
       const url = editingAddress ? `/api/addresses/${editingAddress.id}` : '/api/addresses';
@@ -147,16 +236,18 @@ export function CheckoutClient() {
         if (data.data?.id) {
           setSelectedAddressId(data.data.id);
         }
-        resetAddressForm();
         fetchAddresses();
-        toast.success('Address saved successfully!');
+        toast.success('Address and customer details verified & saved!');
+        return true;
       } else {
         setShowAddressForm(false);
-        toast.success('Address saved for delivery!');
+        toast.success('Delivery details noted!');
+        return true;
       }
     } catch (error) {
       console.error('Failed to save address:', error);
-      alert('An error occurred. Please try again.');
+      toast.error('Could not save address. Please try again.');
+      return false;
     }
   };
 
@@ -325,9 +416,68 @@ export function CheckoutClient() {
     setIsProcessingPayment(true);
 
     try {
-      const customerName = selectedAddress?.name || addressForm.full_name || 'Valued Customer';
-      const customerEmail = (selectedAddress as any)?.email || addressForm.email || 'customer@kawaiora.com';
-      const customerPhone = selectedAddress?.phone || addressForm.phone || '+919876543210';
+      const customerName = (addressForm.full_name || selectedAddress?.name || (selectedAddress as any)?.full_name || '').trim();
+      const customerEmail = (addressForm.email || (selectedAddress as any)?.email || '').trim();
+      const customerPhone = (addressForm.phone || selectedAddress?.phone || '').trim();
+
+      const line1 = (addressForm.address_line_1 || selectedAddress?.address_line_1 || '').trim();
+      const line2 = (addressForm.address_line_2 || selectedAddress?.address_line_2 || '').trim();
+      const city = (addressForm.city || selectedAddress?.city || '').trim();
+      const state = (addressForm.state || selectedAddress?.state || '').trim();
+      const pincode = (addressForm.pincode || selectedAddress?.postal_code || '').trim();
+      const landmark = (addressForm.landmark || (selectedAddress as any)?.landmark || '').trim();
+
+      // Guard check: strictly ensure complete customer and delivery details exist
+      if (!customerName || customerName.length < 3) {
+        toast.error('Please enter your full name in the delivery address.');
+        setStep(1);
+        setShowAddressForm(true);
+        setIsProcessingPayment(false);
+        return;
+      }
+      if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+        toast.error('Please provide a valid email address for invoice and tracking.');
+        setStep(1);
+        setShowAddressForm(true);
+        setIsProcessingPayment(false);
+        return;
+      }
+      const cleanPhone = customerPhone.replace(/[\s\-\+]/g, '').replace(/^91/, '').replace(/^0/, '');
+      if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+        toast.error('Please enter a valid 10-digit Indian mobile number for delivery coordination.');
+        setStep(1);
+        setShowAddressForm(true);
+        setIsProcessingPayment(false);
+        return;
+      }
+      if (!line1 || line1.length < 4) {
+        toast.error('Please provide your complete house/building address.');
+        setStep(1);
+        setShowAddressForm(true);
+        setIsProcessingPayment(false);
+        return;
+      }
+      if (!city || city.length < 2) {
+        toast.error('Please provide your city/district.');
+        setStep(1);
+        setShowAddressForm(true);
+        setIsProcessingPayment(false);
+        return;
+      }
+      if (!state) {
+        toast.error('Please select your state.');
+        setStep(1);
+        setShowAddressForm(true);
+        setIsProcessingPayment(false);
+        return;
+      }
+      if (!pincode || !/^[1-9][0-9]{5}$/.test(pincode)) {
+        toast.error('Please enter a valid 6-digit PIN code.');
+        setStep(1);
+        setShowAddressForm(true);
+        setIsProcessingPayment(false);
+        return;
+      }
 
       const methodLabel =
         chosenPaymentMethod === 'cod'
@@ -355,12 +505,12 @@ export function CheckoutClient() {
           recipient_name: customerName,
           recipient_phone: customerPhone,
           recipient_address: {
-            address_line_1: selectedAddress?.address_line_1 || addressForm.address_line_1 || 'Flat 402, Royal Palms',
-            address_line_2: selectedAddress?.address_line_2 || addressForm.address_line_2 || '',
-            landmark: selectedAddress?.landmark || addressForm.landmark || '',
-            city: selectedAddress?.city || addressForm.city || 'Mumbai',
-            state: selectedAddress?.state || addressForm.state || 'Maharashtra',
-            postal_code: selectedAddress?.postal_code || addressForm.pincode || '400050',
+            address_line_1: line1,
+            address_line_2: line2,
+            landmark: landmark,
+            city: city,
+            state: state,
+            postal_code: pincode,
             country: 'India',
           },
           delivery_date: deliveryDate || new Date().toISOString().split('T')[0],
@@ -625,24 +775,30 @@ export function CheckoutClient() {
                   onDelete={handleDeleteAddress}
                   onSetDefault={handleSetDefaultAddress}
                   showForm={showAddressForm}
-                  onCloseForm={() => { setShowAddressForm(false); setEditingAddress(null); resetAddressForm(); }}
+                  onCloseForm={() => { setShowAddressForm(false); setEditingAddress(null); }}
                   addressForm={addressForm}
                   onFormChange={setAddressForm}
                   onFormSubmit={handleAddressSubmit}
                   editingAddress={editingAddress}
+                  formErrors={formErrors}
                 />
                 
                 <div className="flex justify-end mt-6">
                   <Button
-                    onClick={() => {
+                    onClick={async () => {
+                      if (showAddressForm) {
+                        const saved = await handleAddressSubmit();
+                        if (saved) setStep(2);
+                        return;
+                      }
                       if (!selectedAddressId) {
-                        alert('Please select or add a shipping address');
+                        setShowAddressForm(true);
+                        toast.error('Please enter and save your delivery details.');
                         return;
                       }
                       setStep(2);
                     }}
                     rightIcon={<ArrowRight className="w-4 h-4" />}
-                    disabled={!selectedAddressId}
                   >
                     Continue to Delivery
                   </Button>
@@ -765,6 +921,7 @@ function AddressSection({
   onFormChange,
   onFormSubmit,
   editingAddress,
+  formErrors = {},
 }: {
   addresses: Address[];
   selectedAddressId: string | null;
@@ -779,56 +936,132 @@ function AddressSection({
   onFormChange: React.Dispatch<React.SetStateAction<AddressFormData>>;
   onFormSubmit: (e: React.FormEvent) => void;
   editingAddress: Address | null;
+  formErrors?: Record<string, string>;
 }) {
   if (showForm) {
     return (
       <form onSubmit={onFormSubmit} className="space-y-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-slate-900 dark:text-white">
-            {editingAddress ? 'Edit Address' : 'Add New Address'}
-          </h3>
-          <button type="button" onClick={onCloseForm} className="text-slate-500 hover:text-rose-500">
-            <XCircle className="w-5 h-5" />
-          </button>
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-base">
+              {editingAddress ? 'Update Delivery & Customer Details' : 'Customer & Delivery Information'}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Please provide complete details so the admin and courier team can deliver on schedule.
+            </p>
+          </div>
+          {addresses.length > 0 && (
+            <button type="button" onClick={onCloseForm} className="text-slate-500 hover:text-rose-500 p-1">
+              <XCircle className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label="Full Name" value={addressForm.full_name} onChange={(e) => onFormChange({...addressForm, full_name: e.target.value})} required />
-          <Input label="Phone" value={addressForm.phone} onChange={(e) => onFormChange({...addressForm, phone: e.target.value})} type="tel" required />
+          <Input
+            label="Full Name *"
+            placeholder="e.g. Ananya Roy"
+            value={addressForm.full_name}
+            onChange={(e) => onFormChange({...addressForm, full_name: e.target.value})}
+            error={formErrors.full_name}
+            required
+          />
+          <Input
+            label="Phone Number *"
+            placeholder="10-digit mobile number"
+            value={addressForm.phone}
+            onChange={(e) => onFormChange({...addressForm, phone: e.target.value})}
+            error={formErrors.phone}
+            helperText="10-digit Indian mobile number for delivery OTP"
+            type="tel"
+            maxLength={13}
+            required
+          />
         </div>
-        <Input label="Email (optional)" value={addressForm.email} onChange={(e) => onFormChange({...addressForm, email: e.target.value})} type="email" />
-        <Input label="Address Line 1" value={addressForm.address_line_1} onChange={(e) => onFormChange({...addressForm, address_line_1: e.target.value})} placeholder="House/Building name" required />
-        <Input label="Address Line 2 (optional)" value={addressForm.address_line_2} onChange={(e) => onFormChange({...addressForm, address_line_2: e.target.value})} placeholder="Area/Street" />
+
+        <Input
+          label="Email Address *"
+          placeholder="your.name@example.com"
+          value={addressForm.email}
+          onChange={(e) => onFormChange({...addressForm, email: e.target.value})}
+          error={formErrors.email}
+          helperText="Order confirmation, tracking updates & digital invoice will be sent here"
+          type="email"
+          required
+        />
+
+        <Input
+          label="House / Flat / Floor / Building Name *"
+          placeholder="e.g. Flat 402, Royal Palms, Block B"
+          value={addressForm.address_line_1}
+          onChange={(e) => onFormChange({...addressForm, address_line_1: e.target.value})}
+          error={formErrors.address_line_1}
+          required
+        />
+
+        <Input
+          label="Street / Colony / Locality / Road *"
+          placeholder="e.g. Hill Road, Bandra West"
+          value={addressForm.address_line_2}
+          onChange={(e) => onFormChange({...addressForm, address_line_2: e.target.value})}
+          error={formErrors.address_line_2}
+          required
+        />
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Input label="City" value={addressForm.city} onChange={(e) => onFormChange({...addressForm, city: e.target.value})} required />
+          <Input
+            label="City / District *"
+            placeholder="e.g. Mumbai"
+            value={addressForm.city}
+            onChange={(e) => onFormChange({...addressForm, city: e.target.value})}
+            error={formErrors.city}
+            required
+          />
           <Select
-            label="State"
+            label="State / Union Territory *"
             value={addressForm.state}
             onChange={(e) => onFormChange({...addressForm, state: e.target.value})}
+            error={formErrors.state}
             required
             options={STATES.map(s => ({ value: s, label: s }))}
           />
-          <Input label="PIN Code" value={addressForm.pincode} onChange={(e) => onFormChange({...addressForm, pincode: e.target.value})} placeholder="6-digit PIN" maxLength={6} required />
+          <Input
+            label="PIN Code *"
+            value={addressForm.pincode}
+            onChange={(e) => onFormChange({...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})}
+            placeholder="6-digit PIN"
+            maxLength={6}
+            error={formErrors.pincode}
+            required
+          />
         </div>
-        <Input label="Landmark (optional)" value={addressForm.landmark} onChange={(e) => onFormChange({...addressForm, landmark: e.target.value})} placeholder="Nearby landmark" />
+
+        <Input
+          label="Nearby Landmark (Optional)"
+          value={addressForm.landmark}
+          onChange={(e) => onFormChange({...addressForm, landmark: e.target.value})}
+          placeholder="e.g. Near Bandra Police Station / Opp Metro Station"
+        />
         
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className="flex items-center gap-2 cursor-pointer pt-1">
           <input
             type="checkbox"
             checked={addressForm.is_default}
             onChange={(e) => onFormChange({...addressForm, is_default: e.target.checked})}
             className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
           />
-          <span className="text-sm text-slate-700 dark:text-slate-300">Set as default address</span>
+          <span className="text-xs text-slate-700 dark:text-slate-300">Save as default delivery address for future orders</span>
         </label>
 
         <div className="flex gap-3 pt-4">
           <Button type="submit" className="flex-1">
-            {editingAddress ? 'Update Address' : 'Save Address'}
+            {editingAddress ? 'Update Details' : 'Save Delivery Details'}
           </Button>
-          <Button type="button" variant="secondary" onClick={onCloseForm}>
-            Cancel
-          </Button>
+          {addresses.length > 0 && (
+            <Button type="button" variant="secondary" onClick={onCloseForm}>
+              Cancel
+            </Button>
+          )}
         </div>
       </form>
     );

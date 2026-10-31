@@ -97,10 +97,10 @@ export function FeaturedHampers() {
   const [hampers, setHampers] = useState(FEATURED_HAMPERS);
 
   useEffect(() => {
-    fetch('/api/products?limit=8')
+    fetch('/api/products?limit=8', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.data && data.data.length > 0) {
+        if (data.success && Array.isArray(data.data)) {
           setHampers(
             data.data.map((p: any) => ({
               id: String(p.id),
@@ -111,7 +111,7 @@ export function FeaturedHampers() {
               rating: p.rating,
               reviewCount: p.review_count || p.reviews_count || 12,
               image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=800&q=80',
-              tag: p.is_bestseller ? 'Bestseller' : 'Curated',
+              tag: p.is_bestseller ? 'Bestseller' : (p.tag || 'Curated'),
               description: p.short_description || p.description,
               slug: p.slug,
             }))

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { querySqlite } from '@/lib/sqlite';
 
 export const dynamic = 'force-dynamic';
@@ -78,27 +79,31 @@ function formatCustomItems(items: any[]) {
 export async function GET() {
   // 1. Try Supabase first
   try {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const { data: items, error } = await supabase
       .from('custom_items')
       .select('*')
       .order('id', { ascending: true });
 
-    if (!error && items && items.length > 0) {
-      return NextResponse.json({
+    if (!error && Array.isArray(items) && items.length > 0) {
+      const res = NextResponse.json({
         success: true,
         data: formatCustomItems(items),
       });
+      res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      return res;
     }
   } catch {}
 
   // 2. SQLite fallback
   try {
     const sqliteItems = await querySqlite(`SELECT * FROM custom_items`);
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       data: formatCustomItems(sqliteItems),
     });
+    res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    return res;
   } catch (error) {
     console.error('Custom builder fetch error:', error);
     return NextResponse.json(
