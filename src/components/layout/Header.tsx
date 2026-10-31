@@ -320,12 +320,12 @@ export function Header() {
             <Link
               href="/"
               className="flex items-center shrink-0 group"
-              aria-label={`${brand.brand_short_name || 'Kawaiora Hampers'} Home`}
+              aria-label={`${brand.brand_short_name || 'Kavayura Hampers'} Home`}
             >
               <div className="h-12 sm:h-14 px-2.5 sm:px-3 py-1 bg-black rounded-xl sm:rounded-2xl border border-orange-500/30 flex items-center justify-center shadow-lg transition group-hover:scale-105 group-hover:border-orange-500/60 shadow-glow-halloween/20">
                 <img
                   src={brand.logo_url || '/images/kawaiora-logo.png'}
-                  alt={brand.brand_name || 'Kawaiora Hampers'}
+                  alt={brand.brand_name || 'Kavayura Hampers'}
                   className="h-8 sm:h-10 w-auto object-contain"
                 />
               </div>
@@ -699,7 +699,7 @@ export function Header() {
                 <div className="h-10 px-2.5 py-1 bg-black rounded-xl border border-slate-900 flex items-center justify-center shadow-md">
                   <img
                     src={brand.logo_url || '/images/kawaiora-logo.png'}
-                    alt={brand.brand_name || 'Kawaiora Hampers'}
+                    alt={brand.brand_name || 'Kavayura Hampers'}
                     className="h-7 w-auto object-contain"
                   />
                 </div>

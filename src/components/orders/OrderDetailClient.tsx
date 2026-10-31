@@ -131,18 +131,60 @@ const STATUS_PROGRESS = [
   { key: 'delivered', label: 'Delivered', desc: 'Delivered to recipient' },
 ];
 
+interface CancellationTicket {
+  id: string | number;
+  ticket_number: string;
+  order_id: string | number;
+  order_number: string;
+  reason: string;
+  description?: string | null;
+  status: 'pending' | 'under_review' | 'approved' | 'rejected';
+  admin_notes?: string | null;
+  rejection_reason?: string | null;
+  created_at: string;
+  resolved_at?: string | null;
+}
+
+const CANCEL_REASONS = [
+  'Found an alternative gift',
+  'Incorrect delivery address or recipient details',
+  'Accidental duplicate order',
+  'Delivery date / occasion timing changed',
+  'Need to change customization / message',
+  'Placed order by mistake',
+  'Other reason',
+];
+
 export function OrderDetailClient({ orderId }: { orderId: string }) {
   const { brand } = useBrand();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReason, setCancelReason] = useState(CANCEL_REASONS[0]);
+  const [cancelDescription, setCancelDescription] = useState('');
+  const [submittingCancel, setSubmittingCancel] = useState(false);
+  const [ticket, setTicket] = useState<CancellationTicket | null>(null);
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   useEffect(() => {
     fetchOrder();
+    fetchCancellationTicket();
   }, [orderId]);
+
+  const fetchCancellationTicket = async () => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/cancel-ticket`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.ticket) {
+          setTicket(json.ticket);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch cancellation ticket:', err);
+    }
+  };
 
   const fetchReceipt = async (orderData: Order) => {
     try {
@@ -216,25 +258,34 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
   };
 
   const handleCancelOrder = async () => {
-    if (!cancelReason.trim()) return;
+    if (!cancelReason.trim()) {
+      toast.error('Please select a cancellation reason');
+      return;
+    }
     try {
-      const response = await fetch(`/api/orders/${orderId}/cancel`, {
+      setSubmittingCancel(true);
+      const response = await fetch(`/api/orders/${orderId}/cancel-ticket`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: cancelReason }),
+        body: JSON.stringify({
+          reason: cancelReason,
+          description: cancelDescription,
+        }),
       });
       const data = await response.json();
       if (data.success) {
-        toast.success('Order cancelled successfully');
+        toast.success(`Cancellation ticket ${data.ticket?.ticket_number || ''} submitted for admin review`);
         setShowCancelModal(false);
-        setCancelReason('');
-        fetchOrder();
+        setCancelDescription('');
+        await Promise.all([fetchOrder(), fetchCancellationTicket()]);
       } else {
-        toast.error(data.error || 'Failed to cancel order');
+        toast.error(data.error || 'Failed to submit cancellation request');
       }
     } catch (error) {
-      console.error('Cancel order error:', error);
-      toast.error('Failed to cancel order');
+      console.error('Submit cancellation ticket error:', error);
+      toast.error('Failed to submit cancellation request');
+    } finally {
+      setSubmittingCancel(false);
     }
   };
 
@@ -315,14 +366,19 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {canCancel && (
+            {ticket && (ticket.status === 'pending' || ticket.status === 'under_review') ? (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 rounded-md text-xs font-semibold">
+                <Clock className="w-3.5 h-3.5 animate-pulse text-amber-600" />
+                Cancellation Under Review ({ticket.ticket_number})
+              </span>
+            ) : canCancel ? (
               <button
                 onClick={() => setShowCancelModal(true)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-700 dark:text-rose-300 rounded-md text-xs font-semibold shadow-sm transition-colors"
               >
-                <XCircle className="w-3.5 h-3.5" /> Cancel Order
+                <XCircle className="w-3.5 h-3.5" /> Request Cancellation
               </button>
-            )}
+            ) : null}
             <button
               onClick={() => {
                 setShowReceiptModal(true);
@@ -340,6 +396,91 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
             </button>
           </div>
         </div>
+
+        {/* Cancellation Ticket Status Banner (if a ticket exists) */}
+        {ticket && (
+          <div
+            className={cn(
+              'mb-6 rounded-xl border p-4 sm:p-5 shadow-sm transition-all',
+              (ticket.status === 'pending' || ticket.status === 'under_review') &&
+                'bg-amber-50/70 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/60 text-amber-900 dark:text-amber-200',
+              ticket.status === 'approved' &&
+                'bg-emerald-50/70 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200',
+              ticket.status === 'rejected' &&
+                'bg-rose-50/70 border-rose-200 dark:bg-rose-950/20 dark:border-rose-800/60 text-rose-900 dark:text-rose-200'
+            )}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-current/10">
+              <div className="flex items-center gap-2.5">
+                {ticket.status === 'approved' ? (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                ) : ticket.status === 'rejected' ? (
+                  <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                ) : (
+                  <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
+                )}
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base">
+                    {ticket.status === 'approved'
+                      ? 'Cancellation Approved by Support'
+                      : ticket.status === 'rejected'
+                      ? 'Cancellation Request Declined'
+                      : 'Cancellation Request Under Operational Review'}
+                  </h3>
+                  <p className="text-xs opacity-80">
+                    Ticket Number:{' '}
+                    <span className="font-mono font-bold tracking-wide">{ticket.ticket_number}</span>
+                    {' • '}
+                    Submitted on {formatDate(ticket.created_at)}
+                  </p>
+                </div>
+              </div>
+
+              <span
+                className={cn(
+                  'self-start sm:self-auto px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider',
+                  (ticket.status === 'pending' || ticket.status === 'under_review') &&
+                    'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200',
+                  ticket.status === 'approved' &&
+                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200',
+                  ticket.status === 'rejected' &&
+                    'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200'
+                )}
+              >
+                {ticket.status.replace('_', ' ')}
+              </span>
+            </div>
+
+            <div className="pt-3 text-xs sm:text-sm space-y-1.5">
+              <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                <span className="font-semibold opacity-90">Reason given:</span>
+                <span>{ticket.reason}</span>
+                {ticket.description && (
+                  <span className="opacity-75 italic">— &ldquo;{ticket.description}&rdquo;</span>
+                )}
+              </div>
+
+              {ticket.status === 'rejected' && ticket.rejection_reason && (
+                <div className="mt-2 p-3 bg-white/70 dark:bg-black/30 rounded-lg border border-rose-200/60 dark:border-rose-800/40">
+                  <span className="font-semibold block text-rose-700 dark:text-rose-300 mb-0.5">
+                    Admin Feedback:
+                  </span>
+                  <p className="text-xs">{ticket.rejection_reason}</p>
+                </div>
+              )}
+
+              {ticket.status === 'pending' || ticket.status === 'under_review' ? (
+                <p className="text-xs opacity-80 pt-1">
+                  Our Kavayura Hampers fulfilment team is reviewing your ticket. Your order remains active until an administrator takes action. You will be notified once a decision is made.
+                </p>
+              ) : ticket.status === 'approved' ? (
+                <p className="text-xs opacity-80 pt-1">
+                  Order #{order.order_number} has been officially cancelled. Refund processing is underway according to our policy.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        )}
 
         {/* 3-Card Summary Box */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -753,52 +894,78 @@ export function OrderDetailClient({ orderId }: { orderId: string }) {
           </Modal>
         )}
 
-        {/* Order Cancellation Modal */}
+        {/* Order Cancellation Request Modal */}
         {showCancelModal && (
           <Modal
             isOpen={showCancelModal}
             onClose={() => {
+              if (submittingCancel) return;
               setShowCancelModal(false);
-              setCancelReason('');
+              setCancelDescription('');
             }}
-            title="Cancel Order"
+            title="Request Order Cancellation"
             size="md"
           >
-            <div className="space-y-4 py-2">
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                Are you sure you want to cancel order <span className="font-mono font-bold text-slate-900 dark:text-white">#{order.order_number}</span>?
-                Orders can be cancelled before dispatch. Any settled payment will be automatically refunded.
-              </p>
+            <div className="space-y-4 py-2 text-slate-800 dark:text-slate-200">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200/80 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  Admin-Approved Cancellation Process
+                </p>
+                <p className="text-[11px] leading-relaxed">
+                  Because hampers are handcrafted and personalized, cancellation requests are reviewed by our operations team before dispatch. Submitting this request creates an official ticket for admin review without interrupting existing order safeguards.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Reason for Cancellation <span className="text-rose-500">*</span>
+                  Select Reason <span className="text-rose-500">*</span>
                 </label>
-                <textarea
+                <select
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="e.g. Ordered duplicate hamper by accident, needed to change delivery address, changed gift recipient..."
+                  className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 dark:text-white"
+                >
+                  {CANCEL_REASONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Additional Notes / Details <span className="text-slate-400 font-normal">(optional)</span>
+                </label>
+                <textarea
+                  value={cancelDescription}
+                  onChange={(e) => setCancelDescription(e.target.value)}
+                  placeholder="Please provide any additional context (e.g., recipient requested rescheduling, new address needed, changed gift selection)..."
                   rows={3}
                   className="w-full text-xs p-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 dark:text-white"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setShowCancelModal(false);
-                    setCancelReason('');
+                    setCancelDescription('');
                   }}
+                  disabled={submittingCancel}
                 >
-                  Keep Order
+                  Keep Order Active
                 </Button>
                 <Button
                   variant="rose"
                   size="sm"
                   onClick={handleCancelOrder}
-                  disabled={!cancelReason.trim()}
+                  disabled={submittingCancel || !cancelReason.trim()}
                 >
-                  Confirm Cancellation
+                  {submittingCancel ? 'Submitting Ticket...' : 'Submit Cancellation Ticket'}
                 </Button>
               </div>
             </div>

@@ -61,6 +61,46 @@ export function AdminBrandClient() {
   const [previewTab, setPreviewTab] = useState<'desktop' | 'mobile'>('desktop');
   const [previewTheme, setPreviewTheme] = useState<'light' | 'dark'>('light');
   const [restoringId, setRestoringId] = useState<number | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isMobile = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image file must be under 5MB');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('images', file);
+
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.urls?.[0]) {
+        const uploadedUrl = data.urls[0];
+        if (isMobile) {
+          setForm(prev => ({ ...prev, logo_mobile_url: uploadedUrl }));
+        } else {
+          setForm(prev => ({ ...prev, logo_url: uploadedUrl }));
+        }
+        toast.success('Logo uploaded! Preview updated.');
+      } else {
+        toast.error(data.error || 'Failed to upload logo');
+      }
+    } catch (err) {
+      console.error('Logo upload error:', err);
+      toast.error('Network error during logo upload');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   useEffect(() => {
     setForm(activeBrand);
@@ -327,11 +367,26 @@ export function AdminBrandClient() {
               Brand Logo & Favicon Assets
             </h2>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Primary Desktop Brand Logo URL (Transparent PNG or SVG)
-                </label>
+            <div className="space-y-5">
+              {/* Primary Desktop Logo Upload & URL */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    Primary Desktop Logo <span className="text-rose-500">*</span>
+                  </label>
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-sm transition">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingLogo ? 'Uploading...' : 'Upload Image'}</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                      onChange={(e) => handleLogoFileUpload(e, false)}
+                      className="hidden"
+                      disabled={uploadingLogo}
+                    />
+                  </label>
+                </div>
+
                 <input
                   type="text"
                   value={form.logo_url}
@@ -339,15 +394,58 @@ export function AdminBrandClient() {
                   placeholder="/images/kawaiora-logo.png or https://..."
                   className="w-full px-3.5 py-2 text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Supports transparent PNGs, SVGs, or WebP. Recommended height: 48px to 64px.
+
+                {/* Logo Preview Strip */}
+                {form.logo_url && (
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div className="p-3 rounded-xl bg-white border border-slate-200 text-center flex flex-col items-center justify-center">
+                      <span className="text-[10px] font-semibold text-slate-400 mb-1.5">Light Background</span>
+                      <img
+                        src={form.logo_url}
+                        alt="Desktop Logo Light"
+                        className="h-10 w-auto object-contain"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = '/images/kawaiora-logo.png';
+                        }}
+                      />
+                    </div>
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center flex flex-col items-center justify-center">
+                      <span className="text-[10px] font-semibold text-slate-500 mb-1.5">Dark Background</span>
+                      <img
+                        src={form.logo_url}
+                        alt="Desktop Logo Dark"
+                        className="h-10 w-auto object-contain"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = '/images/kawaiora-logo.png';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                <p className="text-[11px] text-slate-400">
+                  Recommended: Transparent PNG, WebP or SVG format, height 48px to 64px.
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Mobile Logo Variant URL (Optional)
-                </label>
+              {/* Mobile Logo Upload & URL */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    Mobile Compact Logo (Optional)
+                  </label>
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-sm transition">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Upload Mobile Logo</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                      onChange={(e) => handleLogoFileUpload(e, true)}
+                      className="hidden"
+                      disabled={uploadingLogo}
+                    />
+                  </label>
+                </div>
+
                 <input
                   type="text"
                   value={form.logo_mobile_url}

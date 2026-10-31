@@ -12,12 +12,12 @@ export async function POST(request: NextRequest) {
 
     const lowerEmail = validated.email.toLowerCase();
 
-    // 1. Authoritative KawaiOra Administrator login
-    if (lowerEmail === 'admin@kawaiora.com' && validated.password === 'Kawaiora1Himanshu') {
+    // 1. Authoritative Administrator login
+    if ((lowerEmail === 'admin@kawaiora.com' || lowerEmail === 'admin@kavayurahampers.com') && validated.password === 'Kawaiora1Himanshu') {
       const authUser = {
         id: '1',
-        email: 'admin@kawaiora.com',
-        name: 'KawaiOra Administrator',
+        email: lowerEmail,
+        name: 'Kavayura Administrator',
         role: 'admin' as const,
         phone: '+919876543210',
         phone_verified: true,

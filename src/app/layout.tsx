@@ -17,14 +17,14 @@ const getMetadataBaseUrl = () => {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Kawaiora Hampers | Premium Gift Hampers for Every Occasion',
-    template: '%s | Kawaiora Hampers',
+    default: 'Kavayura Hampers | Premium Gift Hampers for Every Occasion',
+    template: '%s | Kavayura Hampers',
   },
   description: 'Discover thoughtfully curated artisan gift hampers for birthdays, anniversaries, weddings, corporate gifting, and more. Premium packaging, personalized messages, and reliable delivery across India.',
-  keywords: ['gift hampers', 'birthday gifts', 'anniversary gifts', 'corporate gifts', 'wedding hampers', 'personalized gifts', 'luxury gift boxes', 'online gifting India'],
-  authors: [{ name: 'Kawaiora Hampers' }],
-  creator: 'Kawaiora Hampers',
-  publisher: 'Kawaiora Hampers',
+  keywords: ['gift hampers', 'birthday gifts', 'anniversary gifts', 'corporate gifts', 'wedding hampers', 'personalized gifts', 'luxury gift boxes', 'online gifting India', 'kavayura hampers'],
+  authors: [{ name: 'Kavayura Hampers' }],
+  creator: 'Kavayura Hampers',
+  publisher: 'Kavayura Hampers',
   formatDetection: {
     email: false,
     address: false,
@@ -35,21 +35,21 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_IN',
     url: '/',
-    siteName: 'Kawaiora Hampers',
-    title: 'Kawaiora Hampers | Premium Gift Hampers for Every Occasion',
+    siteName: 'Kavayura Hampers',
+    title: 'Kavayura Hampers | Premium Gift Hampers for Every Occasion',
     description: 'Discover thoughtfully curated artisan gift hampers for birthdays, anniversaries, weddings, corporate gifting, and more.',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Kawaiora Hampers',
+        alt: 'Kavayura Hampers',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kawaiora Hampers',
+    title: 'Kavayura Hampers',
     description: 'Premium gift hampers for every occasion',
     images: ['/og-image.jpg'],
   },

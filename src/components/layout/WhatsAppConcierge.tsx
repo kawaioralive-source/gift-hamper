@@ -12,7 +12,7 @@ export function WhatsAppConcierge() {
   return (
     <div className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40">
       <a
-        href={`https://wa.me/919820145821?text=${encodeURIComponent('Hi Kawaiora Hampers! I need help selecting a luxury gift hamper.')}`}
+        href={`https://wa.me/919820145821?text=${encodeURIComponent('Hi Kavayura Hampers! I need help selecting a luxury gift hamper.')}`}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-emerald-600/30 border border-emerald-400/30 transition hover:scale-105 active:scale-95 group"

@@ -6,18 +6,18 @@ import { revalidatePath } from 'next/cache';
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_BRAND = {
-  brand_name: 'KawaiOra Artisan Hampers',
-  brand_short_name: 'KawaiOra',
+  brand_name: 'Kavayura Hampers',
+  brand_short_name: 'Kavayura',
   brand_tagline: 'Artisan Handcrafted Hampers & Nationwide Luxury Gifting',
   logo_url: '/images/kawaiora-logo.png',
   logo_mobile_url: '/images/kawaiora-logo.png',
   favicon_url: '/images/kawaiora-logo.png',
-  support_email: 'support@kawaiora.com',
+  support_email: 'support@kavayurahampers.com',
   support_phone: '+91 98201 45821',
   support_address: 'Mumbai, Maharashtra, India',
   primary_color: '#d97706',
   accent_color: '#e11d48',
-  announcement_text: '🌿 KAWAIORA Artisan Hampers | Nationwide Express Delivery & Handcrafted Luxury Gifts',
+  announcement_text: '✨ Kavayura Hampers | Handcrafted Luxury Gifts & Nationwide Express Delivery',
 };
 
 export async function GET() {

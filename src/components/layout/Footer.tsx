@@ -54,11 +54,11 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8">
           {/* Brand */}
           <div className="lg:col-span-1 space-y-6">
-            <Link href="/" className="inline-flex items-center group" aria-label={`${brand.brand_short_name || 'Kawaiora Hampers'} Home`}>
+            <Link href="/" className="inline-flex items-center group" aria-label={`${brand.brand_short_name || 'Kavayura Hampers'} Home`}>
               <div className="h-12 px-3 py-1 bg-black rounded-xl border border-slate-800 flex items-center justify-center shadow-lg transition group-hover:scale-105">
                 <img
                   src={brand.logo_url || '/images/kawaiora-logo.png'}
-                  alt={brand.brand_name || 'Kawaiora Hampers'}
+                  alt={brand.brand_name || 'Kavayura Hampers'}
                   className="h-9 w-auto object-contain"
                 />
               </div>
@@ -180,7 +180,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-slate-800">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs text-slate-500 text-center md:text-left">
-              &copy; {new Date().getFullYear()} {brand.brand_name || 'Kawaiora Hampers'}. All rights reserved.
+              &copy; {new Date().getFullYear()} {brand.brand_name || 'Kavayura Hampers'}. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-xs text-slate-500">
               <Link href="/privacy" className="hover:text-amber-400 transition-colors">Privacy Policy</Link>
