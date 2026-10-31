@@ -129,13 +129,13 @@ export function OrdersClient() {
       const response = await fetch('/api/orders');
       if (response.ok) {
         const data = await response.json();
-        if (data.success && Array.isArray(data.data)) {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
           setOrders(data.data);
           return;
         }
       }
 
-      // If user placed orders stored in localStorage, try recovering them
+      // If user placed orders stored in localStorage, recover them
       try {
         const placed = JSON.parse(localStorage.getItem('kawaiora_placed_orders') || '[]');
         if (Array.isArray(placed) && placed.length > 0) {
@@ -151,9 +151,12 @@ export function OrdersClient() {
           }
           if (recovered.length > 0) {
             setOrders(recovered);
+            return;
           }
         }
       } catch {}
+
+      setOrders([]);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {

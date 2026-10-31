@@ -23,8 +23,8 @@ interface DynamicHomepageProps {
 }
 
 const DEFAULT_ORDER = [
-  'hero',
   'story_highlights',
+  'hero',
   'trust_bar',
   'moods',
   'occasions',
@@ -56,10 +56,17 @@ export function DynamicHomepage({ initialConfig }: DynamicHomepageProps) {
           const json = await res.json();
           if (json.success && json.data) {
             if (Array.isArray(json.data.sections_order)) {
-              setSectionsOrder(json.data.sections_order);
+              let order = json.data.sections_order;
+              if (!order.includes('story_highlights')) {
+                order = ['story_highlights', ...order];
+              }
+              setSectionsOrder(order);
             }
             if (json.data.sections_visibility) {
-              setSectionsVisibility(json.data.sections_visibility);
+              setSectionsVisibility({
+                ...json.data.sections_visibility,
+                story_highlights: json.data.sections_visibility.story_highlights ?? true,
+              });
             }
             if (json.data.promotional_banner_text) {
               setPromoBanner({

@@ -17,7 +17,6 @@ export default function HomePage() {
       <Header />
       <DynamicHomepage />
       <Footer />
-      <CartDrawer />
       <MobileBottomNav />
       <WhatsAppConcierge />
     </div>

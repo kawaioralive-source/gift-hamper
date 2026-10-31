@@ -14,7 +14,6 @@ export default function MainLayout({
       <Header />
       <main className="flex-grow">{children}</main>
       <Footer />
-      <CartDrawer />
       <MobileBottomNav />
       <WhatsAppConcierge />
     </div>

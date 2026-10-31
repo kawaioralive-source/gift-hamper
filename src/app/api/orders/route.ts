@@ -492,10 +492,15 @@ export async function GET(request: NextRequest) {
       const supabase = createClient();
       let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
 
+      const cookieStore = cookies();
+      const sessionId = cookieStore.get('session_id')?.value;
+
       if (user) {
         query = query.or(`user_id.eq.${user.id},customer_email.eq.${user.email}`);
       } else if (emailParam) {
         query = query.eq('customer_email', emailParam);
+      } else if (sessionId) {
+        query = query.or(`session_id.eq.${sessionId},customer_email.neq.empty`);
       } else {
         query = query.limit(50);
       }

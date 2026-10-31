@@ -93,7 +93,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/cart');
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.data?.items?.length) {
+        if (data.success && Array.isArray(data.data?.items) && data.data.items.length > 0) {
           const { total, count } = calculateTotals(data.data.items);
           setCart({ items: data.data.items, total, count });
           setLocalCart({ items: data.data.items, total, count });
@@ -107,7 +107,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     const localCart = getLocalCart();
-    setCart(localCart);
+    if (localCart.items.length > 0) {
+      setCart(localCart);
+    }
   }, [mounted, calculateTotals]);
 
   // Initialize cart on mount
@@ -190,15 +192,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
             custom_hamper_id: customHamperId,
             quantity,
             price,
+            productDetails,
           }),
         });
 
         if (response.ok) {
           const data = await response.json();
           if (data.data?.items?.length) {
-            const serverTotals = calculateTotals(data.data.items);
-            setCart({ items: data.data.items, ...serverTotals });
-            setLocalCart({ items: data.data.items, ...serverTotals });
+            // Ensure product metadata is preserved
+            const mergedItems = data.data.items.map((srvItem: CartItem) => {
+              if (!srvItem.product && (srvItem.product_id === productId || srvItem.product_id === productDetails?.id)) {
+                return { ...srvItem, product: productDetails };
+              }
+              return srvItem;
+            });
+            const serverTotals = calculateTotals(mergedItems);
+            setCart({ items: mergedItems, ...serverTotals });
+            setLocalCart({ items: mergedItems, ...serverTotals });
           }
         }
       } catch (error) {

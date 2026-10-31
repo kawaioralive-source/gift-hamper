@@ -5,6 +5,7 @@ import { BrandProvider } from '@/context/BrandContext';
 import { CartProvider } from '@/hooks/useCart';
 import { WishlistProvider } from '@/hooks/useWishlist';
 import { CurrencyProvider } from '@/context/CurrencyContext';
+import { CartDrawer } from '@/components/cart/CartDrawer';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <CartProvider>
           <WishlistProvider>
             {children}
+            <CartDrawer />
           </WishlistProvider>
         </CartProvider>
       </CurrencyProvider>
