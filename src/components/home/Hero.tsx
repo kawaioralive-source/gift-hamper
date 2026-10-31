@@ -9,87 +9,113 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import toast from 'react-hot-toast';
 
-const HERO_SLIDES = [
+const DEFAULT_HALLOWEEN_SLIDES = [
   {
     id: '1',
-    title: 'Grand Royal Celebration',
-    category: 'Signature Luxury',
-    tag: 'Bestseller',
+    title: '🎃 The Midnight Masquerade Crate',
+    category: 'Halloween Special',
+    tag: '🎃 Limited Edition',
     price: 14999,
     originalPrice: 17999,
     rating: 4.9,
     slug: 'grand-royal-celebration',
     image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1000&q=80',
-    description: 'Imported French sparkling wine, Swiss truffles, truffle crackers, and artisan candle.',
+    description: 'French sparkling wine, Belgian dark chocolate skulls, salted caramels, and scented gothic candle.',
   },
   {
     id: '2',
-    title: 'Artisanal Chocolate & Wine Opulence',
-    category: 'Romantic Milestones',
-    tag: 'Trending',
+    title: '🍫 Belgian Witch Truffles & Wine Opulence',
+    category: 'Haunted Luxe',
+    tag: '🦇 Trending',
     price: 11950,
     originalPrice: 13500,
     rating: 4.8,
     slug: 'artisanal-chocolate-wine',
     image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?auto=format&fit=crop&w=1000&q=80',
-    description: 'Aged Pinot Noir, handcrafted Belgian truffles, dark chocolate almond bark, and silk card.',
+    description: 'Aged Pinot Noir, handcrafted artisanal dark chocolate pralines, spiced roasted pecans, and silk ribbons.',
   },
   {
     id: '3',
-    title: 'Executive Achievement Crate',
-    category: 'Corporate VIP',
+    title: '🕯️ Gothic Twilight Executive Hamper',
+    category: 'Gothic Royale',
     tag: 'VIP Choice',
     price: 18900,
     originalPrice: 21000,
     rating: 5.0,
     slug: 'executive-corporate-crate',
     image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd48?auto=format&fit=crop&w=1000&q=80',
-    description: 'Single malt whiskey, roasted macadamia nuts, leather journal, and custom gold pen set.',
+    description: 'Single malt whiskey, roasted macadamia nuts, black leather bound journal, and obsidian pen set.',
   },
   {
     id: '4',
-    title: 'Festival Sunshine & Treats',
-    category: 'Festive Delight',
-    tag: 'Festive Special',
+    title: '🍂 Autumn Harvest & Spooky Treats Box',
+    category: 'Autumn Delight',
+    tag: '🍁 Spooky Treats',
     price: 8499,
     originalPrice: 9999,
     rating: 4.8,
-    slug: 'festival-sunshine-treats',
+    slug: 'sweet-birthday-basket',
     image: 'https://images.unsplash.com/photo-1512909006721-3d6018887383?auto=format&fit=crop&w=1000&q=80',
-    description: 'Organic dry fruits, saffron honey, artisan clay diyas, and pistachio sweets.',
+    description: 'Organic spiced wildflower honey, cinnamon cookies, artisan clay lanterns, and glazed pistachios.',
   },
 ];
 
 export function Hero() {
+  const [slides, setSlides] = useState(DEFAULT_HALLOWEEN_SLIDES);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const { addToCart } = useCart();
   const [heroConfig, setHeroConfig] = useState({
-    headline: 'Unforgettable Gifts,\nCrafted With Love',
-    subheadline: 'Surprise your loved ones, colleagues, and partners with artisan gourmet hampers, premium sparkling wines, and custom handmade keepsakes delivered right to their doorstep.',
-    badgeText: 'Handcrafted Gift Experiences',
-    primaryButtonText: 'Explore Luxury Hampers',
+    headline: '🎃 Hauntingly Exquisite\nArtisan Hampers',
+    subheadline: 'Bewitch your loved ones, colleagues, and soulmates with limited-edition Belgian chocolates, pumpkin spice luxuries, and enchanted handmade keepsakes delivered across India.',
+    badgeText: '🦇 Halloween Limited Edition Gifting',
+    primaryButtonText: 'Explore Halloween Hampers',
     primaryButtonLink: '/shop',
-    secondaryButtonText: 'Build Custom Hamper',
+    secondaryButtonText: 'Craft Spooky Hamper',
     secondaryButtonLink: '/customize/new',
   });
 
   useEffect(() => {
     async function loadConfig() {
       try {
-        const res = await fetch('/api/homepage-editor');
-        if (res.ok) {
-          const json = await res.json();
+        const [homeRes, imagesRes] = await Promise.all([
+          fetch('/api/homepage-editor'),
+          fetch('/api/admin/site-images'),
+        ]);
+
+        if (imagesRes.ok) {
+          const imgJson = await imagesRes.json();
+          if (imgJson.success && Array.isArray(imgJson.data?.hero_slides) && imgJson.data.hero_slides.length > 0) {
+            setSlides(
+              imgJson.data.hero_slides.map((s: any) => ({
+                id: s.id,
+                title: s.title,
+                category: 'Halloween Edition',
+                tag: s.tag,
+                price: s.price,
+                originalPrice: s.original_price,
+                rating: 4.9,
+                slug: s.slug || 'grand-royal-celebration',
+                image: s.image_url,
+                description: s.description,
+              }))
+            );
+          }
+        }
+
+        if (homeRes.ok) {
+          const json = await homeRes.json();
           if (json.success && json.data) {
-            setHeroConfig({
-              headline: json.data.hero_headline || 'Unforgettable Gifts,\nCrafted With Love',
-              subheadline: json.data.hero_subheadline || 'Surprise your loved ones, colleagues, and partners with artisan gourmet hampers, premium sparkling wines, and custom handmade keepsakes delivered right to their doorstep.',
-              badgeText: json.data.hero_badge_text || 'Handcrafted Gift Experiences',
-              primaryButtonText: json.data.hero_primary_button_text || 'Explore Luxury Hampers',
-              primaryButtonLink: json.data.hero_primary_button_link || '/shop',
-              secondaryButtonText: json.data.hero_secondary_button_text || 'Build Custom Hamper',
-              secondaryButtonLink: json.data.hero_secondary_button_link || '/customize/new',
-            });
+            setHeroConfig((prev) => ({
+              ...prev,
+              headline: json.data.hero_headline || prev.headline,
+              subheadline: json.data.hero_subheadline || prev.subheadline,
+              badgeText: json.data.hero_badge_text || prev.badgeText,
+              primaryButtonText: json.data.hero_primary_button_text || prev.primaryButtonText,
+              primaryButtonLink: json.data.hero_primary_button_link || prev.primaryButtonLink,
+              secondaryButtonText: json.data.hero_secondary_button_text || prev.secondaryButtonText,
+              secondaryButtonLink: json.data.hero_secondary_button_link || prev.secondaryButtonLink,
+            }));
           }
         }
       } catch {}
@@ -100,19 +126,22 @@ export function Hero() {
   useEffect(() => {
     if (isPaused) return;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+      setSlides((current) => {
+        setCurrentSlide((prev) => (prev + 1) % current.length);
+        return current;
+      });
     }, 4500);
     return () => clearInterval(interval);
   }, [isPaused]);
 
-  const active = HERO_SLIDES[currentSlide];
+  const active = slides[currentSlide] || DEFAULT_HALLOWEEN_SLIDES[0];
 
   const handlePrev = () => {
-    setCurrentSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   const handleNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
   const handleQuickAdd = (e: React.MouseEvent) => {
@@ -199,7 +228,7 @@ export function Hero() {
             <div className="relative rounded-3xl overflow-hidden glass-panel p-3 shadow-2xl border border-rose-500/30 group">
               {/* Image Carousel */}
               <div className="relative rounded-2xl overflow-hidden aspect-[4/3]">
-                {HERO_SLIDES.map((slide, index) => (
+                {slides.map((slide, index) => (
                   <div
                     key={slide.id}
                     className={cn(
@@ -281,7 +310,7 @@ export function Hero() {
 
               {/* Dot Indicators */}
               <div className="flex items-center justify-center gap-2 mt-3 pb-1">
-                {HERO_SLIDES.map((_, i) => (
+                {slides.map((_, i) => (
                   <button
                     key={i}
                     type="button"

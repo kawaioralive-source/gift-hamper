@@ -45,6 +45,17 @@ module.exports = {
           900: '#0f172a',
           950: '#020617',
         },
+        halloween: {
+          orange: '#ff6600',
+          pumpkin: '#ea580c',
+          purple: '#7928ca',
+          violet: '#6d28d9',
+          deep: '#0a0612',
+          surface: '#130d22',
+          surfaceHover: '#1c1432',
+          border: '#332350',
+          glow: '#ff6600',
+        },
       },
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
@@ -86,6 +97,8 @@ module.exports = {
       boxShadow: {
         'glow-amber': '0 0 20px rgba(217, 119, 6, 0.3)',
         'glow-rose': '0 0 20px rgba(225, 29, 72, 0.3)',
+        'glow-halloween': '0 0 25px rgba(255, 102, 0, 0.35)',
+        'glow-purple': '0 0 25px rgba(121, 40, 202, 0.35)',
         'inner-glow': 'inset 0 0 20px rgba(217, 119, 6, 0.1)',
       },
     },

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, TicketPercent, Settings, LogOut, ChevronLeft, ChevronRight, Menu, X, Sparkles, Building2, Crown, Palette } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, TicketPercent, Settings, LogOut, ChevronLeft, ChevronRight, Menu, X, Sparkles, Building2, Crown, Palette, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { useBrand } from '@/hooks/useBrand';
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/admin/customers', label: 'Customers', icon: Users },
   { href: '/admin/corporate', label: 'Corporate Leads', icon: Building2 },
   { href: '/admin/brand', label: 'Brand Identity', icon: Crown },
+  { href: '/admin/images', label: 'Website Images', icon: ImageIcon },
   { href: '/admin/homepage-editor', label: 'Homepage Editor', icon: Palette },
   { href: '/admin/promo-codes', label: 'Promo Codes', icon: TicketPercent },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },

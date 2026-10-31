@@ -31,8 +31,8 @@ export function MobileBottomNav() {
           className={cn(
             'flex flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold transition',
             pathname === '/'
-              ? 'text-amber-600 dark:text-amber-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              ? 'text-orange-500 font-bold'
+              : 'text-slate-400 hover:text-orange-400'
           )}
         >
           <Home className="w-5 h-5" />
@@ -45,8 +45,8 @@ export function MobileBottomNav() {
           className={cn(
             'flex flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold transition',
             pathname === '/shop'
-              ? 'text-amber-600 dark:text-amber-400 font-bold'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              ? 'text-orange-500 font-bold'
+              : 'text-slate-400 hover:text-orange-400'
           )}
         >
           <Gift className="w-5 h-5" />
@@ -58,11 +58,11 @@ export function MobileBottomNav() {
           href="/customize/new"
           className="flex flex-col items-center justify-center relative -top-2"
         >
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 via-amber-500 to-rose-500 text-black flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-white dark:border-slate-950 transition-transform active:scale-95">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-orange-600 via-amber-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-orange-500/30 border-2 border-slate-950 transition-transform active:scale-95">
             <WandSparkles className="w-6 h-6 text-white" />
           </div>
-          <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 mt-0.5">
-            Curate
+          <span className="text-[10px] font-extrabold text-orange-400 mt-0.5">
+            🎃 Curate
           </span>
         </Link>
 

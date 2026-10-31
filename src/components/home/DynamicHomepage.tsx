@@ -8,7 +8,6 @@ import { PersonalizedGifting } from '@/components/home/PersonalizedGifting';
 import { BestSellers } from '@/components/home/BestSellers';
 import { WhyChooseUs } from '@/components/home/WhyChooseUs';
 import { CustomerReviews } from '@/components/home/CustomerReviews';
-import { InstagramGallery } from '@/components/home/InstagramGallery';
 import { FaqSection } from '@/components/home/FaqSection';
 import { StoryHighlights } from '@/components/home/StoryHighlights';
 import { TrustBenefitsBar } from '@/components/home/TrustBenefitsBar';
@@ -35,7 +34,6 @@ const DEFAULT_ORDER = [
   'story',
   'testimonials',
   'faq',
-  'social',
 ];
 
 export function DynamicHomepage({ initialConfig }: DynamicHomepageProps) {
@@ -116,9 +114,6 @@ export function DynamicHomepage({ initialConfig }: DynamicHomepageProps) {
         return <CustomerReviews key="testimonials" />;
       case 'faq':
         return <FaqSection key="faq" />;
-      case 'corporate':
-      case 'social':
-        return <InstagramGallery key="social" />;
       default:
         return null;
     }

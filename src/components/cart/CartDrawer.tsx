@@ -32,14 +32,17 @@ export function CartDrawer() {
     const clean = promoCode.trim().toUpperCase();
     if (!clean) return;
 
-    if (clean === 'WELCOME10') {
+    if (clean === 'SPOOKY20') {
+      setAppliedPromo({ code: clean, discountPct: 20 });
+      toast.success('🎃 Spooky Halloween Code SPOOKY20 applied! 20% off');
+    } else if (clean === 'WELCOME10') {
       setAppliedPromo({ code: clean, discountPct: 10 });
       toast.success('Promo code WELCOME10 applied! 10% off');
     } else if (clean === 'KAWAIORA15') {
       setAppliedPromo({ code: clean, discountPct: 15 });
       toast.success('Promo code KAWAIORA15 applied! 15% off');
     } else {
-      setPromoError('Invalid coupon code. Try WELCOME10');
+      setPromoError('Invalid coupon code. Try SPOOKY20 or WELCOME10');
     }
   };
 
@@ -98,7 +101,7 @@ export function CartDrawer() {
             </div>
             <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all duration-300 rounded-full"
+                className="h-full bg-gradient-to-r from-orange-500 via-amber-500 to-purple-600 transition-all duration-300 rounded-full"
                 style={{ width: `${shippingProgress}%` }}
               />
             </div>
