@@ -20,18 +20,18 @@ export interface BrandConfig {
 }
 
 export const DEFAULT_BRAND_CONFIG: BrandConfig = {
-  brand_name: 'KawaiOra Artisan Hampers',
-  brand_short_name: 'KawaiOra',
+  brand_name: 'Kawaiora Hampers',
+  brand_short_name: 'Kawaiora Hampers',
   brand_tagline: 'Artisan Handcrafted Hampers & Nationwide Luxury Gifting',
   logo_url: '/images/kawaiora-logo.png',
   logo_mobile_url: '/images/kawaiora-logo.png',
   favicon_url: '/images/kawaiora-logo.png',
-  support_email: 'support@kawaiora.com',
+  support_email: 'support@kawaiorahampers.com',
   support_phone: '+91 98201 45821',
   support_address: 'Mumbai, Maharashtra, India',
-  primary_color: '#d97706',
-  accent_color: '#e11d48',
-  announcement_text: '🌿 KAWAIORA Artisan Hampers | Nationwide Express Delivery & Handcrafted Luxury Gifts',
+  primary_color: '#ea580c',
+  accent_color: '#7928ca',
+  announcement_text: '🎃 Kawaiora Hampers | Limited Edition Artisan Hampers | Express Delivery',
 };
 
 interface BrandContextType {

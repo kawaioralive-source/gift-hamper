@@ -111,7 +111,7 @@ export function BestSellers() {
   const handleAdd = (e: React.MouseEvent, hamper: (typeof BEST_SELLERS)[0]) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(hamper.id, undefined, 1, {
+    addToCart(hamper.slug || hamper.id, undefined, 1, {
       id: hamper.id,
       name: hamper.name,
       slug: hamper.slug,

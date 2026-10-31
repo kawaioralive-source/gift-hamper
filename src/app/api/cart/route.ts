@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
           .from('carts')
           .select('id')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (userCart) {
           cart = userCart;
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
           .from('carts')
           .select('id')
           .eq('session_id', sessionId)
-          .single();
+          .maybeSingle();
 
         if (sessionCart) {
           cart = sessionCart;
@@ -176,14 +176,34 @@ export async function POST(request: NextRequest) {
       }
 
       if (cart) {
-        let existingItem = null;
+        let validProductId: number | null = null;
+        let priceAtAdd = Number(body.price) || 0;
+
         if (productId) {
+          const numId = Number(productId);
+          let pQuery = supabase.from('products').select('id, price');
+          if (!isNaN(numId)) {
+            pQuery = pQuery.eq('id', numId);
+          } else {
+            pQuery = pQuery.eq('slug', productId);
+          }
+          const { data: product } = await pQuery.maybeSingle();
+          if (product) {
+            validProductId = product.id;
+            if (product.price != null) priceAtAdd = Number(product.price);
+          }
+        } else if (customHamperId) {
+          priceAtAdd = body.price != null ? Number(body.price) : 0;
+        }
+
+        let existingItem = null;
+        if (validProductId) {
           const { data } = await supabase
             .from('cart_items')
             .select('id, quantity')
             .eq('cart_id', cart.id)
-            .eq('product_id', productId)
-            .single();
+            .eq('product_id', validProductId)
+            .maybeSingle();
           existingItem = data;
         } else if (customHamperId) {
           const { data } = await supabase
@@ -191,20 +211,8 @@ export async function POST(request: NextRequest) {
             .select('id, quantity')
             .eq('cart_id', cart.id)
             .eq('custom_hamper_id', customHamperId)
-            .single();
+            .maybeSingle();
           existingItem = data;
-        }
-
-        let priceAtAdd = 0;
-        if (productId) {
-          const { data: product } = await supabase
-            .from('products')
-            .select('price')
-            .eq('id', productId)
-            .single();
-          priceAtAdd = product?.price != null ? Number(product.price) : 0;
-        } else if (customHamperId) {
-          priceAtAdd = body.price != null ? Number(body.price) : 0;
         }
 
         if (existingItem) {
@@ -217,20 +225,39 @@ export async function POST(request: NextRequest) {
             .from('cart_items')
             .insert({
               cart_id: cart.id,
-              product_id: productId || null,
+              product_id: validProductId,
               custom_hamper_id: customHamperId || null,
               quantity,
               price_at_add: priceAtAdd,
             });
         }
 
-        return NextResponse.json({
-          success: true,
-          message: 'Added to cart successfully!',
-        });
+        // Fetch refreshed items
+        const { data: cartItems } = await supabase
+          .from('cart_items')
+          .select(`
+            *,
+            product:products(id, name, slug, price, compare_at_price, images, stock),
+            custom_hamper:custom_hampers(id, name, total_price, box_id, card_id, packaging_id)
+          `)
+          .eq('cart_id', cart.id);
+
+        if (cartItems && cartItems.length > 0) {
+          const total = cartItems.reduce((sum, item) => {
+            const price = item.custom_hamper?.total_price ?? item.product?.price ?? item.price_at_add ?? 0;
+            return sum + Number(price) * item.quantity;
+          }, 0);
+          const count = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+          return NextResponse.json({
+            success: true,
+            message: 'Added to cart successfully!',
+            data: { items: cartItems, total, count },
+          });
+        }
       }
-    } catch {
-      // Supabase failed, fall back to SQLite + Cookie cart
+    } catch (supabaseErr) {
+      console.warn('Supabase cart error, using cookie cart:', supabaseErr);
     }
 
     // Cookie & SQLite fallback

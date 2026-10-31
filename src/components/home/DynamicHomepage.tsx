@@ -23,8 +23,8 @@ interface DynamicHomepageProps {
 }
 
 const DEFAULT_ORDER = [
-  'story_highlights',
   'hero',
+  'story_highlights',
   'trust_bar',
   'moods',
   'occasions',

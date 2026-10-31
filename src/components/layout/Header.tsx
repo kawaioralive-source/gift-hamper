@@ -256,31 +256,44 @@ export function Header() {
           : 'border-orange-500/15 shadow-none'
       )}
     >
-      {/* 1. TOP PROMOTIONAL ANNOUNCEMENT BAR (Halloween Theme, Dismissible) */}
+      {/* 1. TOP PROMOTIONAL ANNOUNCEMENT BAR (Continuous Loop Marquee Moving Right) */}
       {!announcementDismissed && (
-        <div className="relative bg-gradient-to-r from-purple-950 via-slate-900 via-orange-950 to-purple-950 border-b border-orange-500/20 text-white text-[11px] sm:text-xs py-2 px-4 font-medium tracking-wide shadow-inner overflow-hidden">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-            <div className="flex-1 text-center truncate pr-6 sm:pr-0">
-              <span className="inline-flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse shrink-0 hidden xs:inline-block shadow-glow-halloween" />
-                {activePromo ? (
+        <div className="relative bg-gradient-to-r from-purple-950 via-slate-900 via-orange-950 to-purple-950 border-b border-orange-500/20 text-white text-[11px] sm:text-xs py-2 px-2 font-medium tracking-wide shadow-inner overflow-hidden">
+          <div className="w-full mx-auto flex items-center justify-between gap-2">
+            <div className="flex-1 overflow-hidden min-w-0">
+              {/* @ts-ignore */}
+              <marquee
+                direction="right"
+                scrollamount="6"
+                behavior="scroll"
+                loop="-1"
+                className="w-full flex items-center gap-6 font-semibold tracking-wide cursor-default"
+              >
+                <span className="inline-flex items-center gap-6">
                   <span>
-                    🎃 {brand.brand_name || 'KawaiOra Artisan Hampers'} | Express Delivery | Use Code:{' '}
+                    🎃 <strong>HALLOWEEN SPOOKTACULAR SALE</strong> • Limited Edition <strong>Kawaiora Hampers</strong> • Use Code:{' '}
                     <strong className="text-orange-300 font-bold tracking-wider uppercase bg-white/10 px-2 py-0.5 rounded border border-orange-400/30">
-                      {activePromo.code}
+                      SPOOKY20
                     </strong>{' '}
-                    ({activePromo.percentage}% Off) 🦇
+                    (20% Off) 🦇
                   </span>
-                ) : (
+                  <span>✨ 100% Handcrafted Luxury Keepsake Boxes & Satin Ribbons</span>
+                  <span>🚚 Pan-India Express Delivery With Live Tracking</span>
+                  <span>📜 Free Textured Handwritten Greeting Card in Wax-Sealed Envelope</span>
                   <span>
-                    {brand.announcement_text || '🎃 HALLOWEEN SPOOKTACULAR SALE | Limited Edition Artisan Hampers | Use Code: SPOOKY20 (20% Off) 🦇🕷️'}
+                    🎃 Welcome to <strong>Kawaiora Hampers</strong> • Use Code:{' '}
+                    <strong className="text-orange-300 font-bold tracking-wider uppercase bg-white/10 px-2 py-0.5 rounded border border-orange-400/30">
+                      WELCOME10
+                    </strong>{' '}
+                    (10% Off) 🎁
                   </span>
-                )}
-              </span>
+                </span>
+              {/* @ts-ignore */}
+              </marquee>
             </div>
             <button
               onClick={handleDismissAnnouncement}
-              className="text-white/70 hover:text-white p-1 rounded-full transition shrink-0"
+              className="text-white/70 hover:text-white p-1 rounded-full transition shrink-0 ml-2"
               aria-label="Dismiss announcement"
             >
               <X className="w-3.5 h-3.5" />
@@ -307,12 +320,12 @@ export function Header() {
             <Link
               href="/"
               className="flex items-center shrink-0 group"
-              aria-label={`${brand.brand_short_name || 'KawaiOra'} Home`}
+              aria-label={`${brand.brand_short_name || 'Kawaiora Hampers'} Home`}
             >
               <div className="h-12 sm:h-14 px-2.5 sm:px-3 py-1 bg-black rounded-xl sm:rounded-2xl border border-orange-500/30 flex items-center justify-center shadow-lg transition group-hover:scale-105 group-hover:border-orange-500/60 shadow-glow-halloween/20">
                 <img
                   src={brand.logo_url || '/images/kawaiora-logo.png'}
-                  alt={brand.brand_name || 'KawaiOra'}
+                  alt={brand.brand_name || 'Kawaiora Hampers'}
                   className="h-8 sm:h-10 w-auto object-contain"
                 />
               </div>
@@ -686,7 +699,7 @@ export function Header() {
                 <div className="h-10 px-2.5 py-1 bg-black rounded-xl border border-slate-900 flex items-center justify-center shadow-md">
                   <img
                     src={brand.logo_url || '/images/kawaiora-logo.png'}
-                    alt={brand.brand_name || 'MyKavayora'}
+                    alt={brand.brand_name || 'Kawaiora Hampers'}
                     className="h-7 w-auto object-contain"
                   />
                 </div>

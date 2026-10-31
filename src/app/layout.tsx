@@ -17,14 +17,14 @@ const getMetadataBaseUrl = () => {
 
 export const metadata: Metadata = {
   title: {
-    default: 'KawaiOra Artisan Hampers | Premium Gift Hampers for Every Occasion',
-    template: '%s | KawaiOra Artisan Hampers',
+    default: 'Kawaiora Hampers | Premium Gift Hampers for Every Occasion',
+    template: '%s | Kawaiora Hampers',
   },
   description: 'Discover thoughtfully curated artisan gift hampers for birthdays, anniversaries, weddings, corporate gifting, and more. Premium packaging, personalized messages, and reliable delivery across India.',
   keywords: ['gift hampers', 'birthday gifts', 'anniversary gifts', 'corporate gifts', 'wedding hampers', 'personalized gifts', 'luxury gift boxes', 'online gifting India'],
-  authors: [{ name: 'KawaiOra Artisan Hampers' }],
-  creator: 'KawaiOra Artisan Hampers',
-  publisher: 'KawaiOra Artisan Hampers',
+  authors: [{ name: 'Kawaiora Hampers' }],
+  creator: 'Kawaiora Hampers',
+  publisher: 'Kawaiora Hampers',
   formatDetection: {
     email: false,
     address: false,
@@ -35,21 +35,21 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_IN',
     url: '/',
-    siteName: 'KawaiOra Artisan Hampers',
-    title: 'KawaiOra Artisan Hampers | Premium Gift Hampers for Every Occasion',
+    siteName: 'Kawaiora Hampers',
+    title: 'Kawaiora Hampers | Premium Gift Hampers for Every Occasion',
     description: 'Discover thoughtfully curated artisan gift hampers for birthdays, anniversaries, weddings, corporate gifting, and more.',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'KawaiOra Artisan Hampers',
+        alt: 'Kawaiora Hampers',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'KawaiOra Artisan Hampers',
+    title: 'Kawaiora Hampers',
     description: 'Premium gift hampers for every occasion',
     images: ['/og-image.jpg'],
   },

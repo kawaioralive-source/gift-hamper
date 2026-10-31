@@ -126,25 +126,20 @@ export async function PATCH(
     const numId = Number(id);
     const updateData: any = {};
     if (body.name !== undefined) updateData.name = body.name;
+    if (body.slug !== undefined) updateData.slug = body.slug;
     if (body.category !== undefined) updateData.category = body.category;
     if (body.category_id !== undefined && !body.category) updateData.category = body.category_id;
     if (body.price !== undefined || body.base_price !== undefined) {
-      const pVal = Number(body.price ?? body.base_price);
-      updateData.price = pVal;
-      updateData.base_price = pVal;
+      updateData.price = Number(body.price ?? body.base_price);
     }
     if (body.compare_at_price !== undefined || body.original_price !== undefined) {
-      const orig = Number(body.compare_at_price ?? body.original_price) || null;
-      updateData.original_price = orig;
-      updateData.compare_at_price = orig;
+      updateData.original_price = Number(body.compare_at_price ?? body.original_price) || null;
     }
     if (body.description !== undefined || body.short_description !== undefined) {
       updateData.description = body.description || body.short_description;
     }
     if (body.stock !== undefined || body.stock_quantity !== undefined) {
-      const sVal = Number(body.stock ?? body.stock_quantity);
-      updateData.stock = sVal;
-      updateData.stock_quantity = sVal;
+      updateData.stock = Number(body.stock ?? body.stock_quantity);
     }
     if (body.images && Array.isArray(body.images)) {
       const sanitizedImages = body.images.filter(Boolean).slice(0, 6);

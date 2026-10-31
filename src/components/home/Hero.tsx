@@ -147,7 +147,7 @@ export function Hero() {
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(active.id, undefined, 1, {
+    addToCart(active.slug || active.id, undefined, 1, {
       id: active.id,
       name: active.title,
       slug: active.slug,

@@ -124,7 +124,7 @@ export function FeaturedHampers() {
   const handleAdd = (e: React.MouseEvent, hamper: (typeof FEATURED_HAMPERS)[0]) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(hamper.id, undefined, 1, {
+    addToCart(hamper.slug || hamper.id, undefined, 1, {
       id: hamper.id,
       name: hamper.name,
       slug: hamper.slug,

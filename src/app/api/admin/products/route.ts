@@ -171,22 +171,23 @@ export async function POST(request: NextRequest) {
     // Try Supabase first
     try {
       const supabase = createClient();
+      const slug = body.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + Date.now().toString().slice(-4);
       const { data: product, error } = await supabase
         .from('products')
         .insert({
           name,
+          slug,
           category,
           price,
           original_price: originalPrice,
-          compare_at_price: originalPrice,
-          base_price: price,
           description,
           stock,
-          stock_quantity: stock,
           image,
           images: imagesJson,
           items: '[]',
           tag,
+          rating: 5.0,
+          reviews_count: 1,
         })
         .select()
         .single();
@@ -198,7 +199,12 @@ export async function POST(request: NextRequest) {
           data: formatProductRowAdmin(product),
         });
       }
-    } catch {}
+      if (error) {
+        console.warn('Supabase product insert error, falling back:', error);
+      }
+    } catch (e) {
+      console.warn('Supabase product insert exception:', e);
+    }
 
     // SQLite fallback - persist into gifthampers.db
     const execRes = await executeSqlite(
