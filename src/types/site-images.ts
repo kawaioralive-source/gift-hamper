@@ -4,6 +4,7 @@ export interface SiteImagesConfig {
     logo_mobile_url: string;
     cart_icon_url: string;
     favicon_url: string;
+    navigation_items: Array<{ href: string; label: string }>;
   };
   halloween_banner: {
     active: boolean;
@@ -45,6 +46,40 @@ export interface SiteImagesConfig {
     brand_story_image: string;
     corporate_banner_image: string;
   };
+  store_settings: {
+    free_shipping_threshold: number;
+  };
+}
+
+export function mergeSiteImagesConfig(
+  base: SiteImagesConfig,
+  value: unknown
+): SiteImagesConfig {
+  const incoming = value && typeof value === 'object'
+    ? value as Partial<SiteImagesConfig>
+    : {};
+
+  return {
+    ...base,
+    ...incoming,
+    header: { ...base.header, ...incoming.header },
+    halloween_banner: { ...base.halloween_banner, ...incoming.halloween_banner },
+    hero_slides: Array.isArray(incoming.hero_slides)
+      ? incoming.hero_slides.map((slide) => ({ ...slide }))
+      : base.hero_slides.map((slide) => ({ ...slide })),
+    circular_products: {
+      ...base.circular_products,
+      ...incoming.circular_products,
+      items: Array.isArray(incoming.circular_products?.items)
+        ? incoming.circular_products.items.map((item) => ({ ...item }))
+        : base.circular_products.items.map((item) => ({ ...item })),
+    },
+    shop_by_mood: Array.isArray(incoming.shop_by_mood)
+      ? incoming.shop_by_mood.map((item) => ({ ...item }))
+      : base.shop_by_mood.map((item) => ({ ...item })),
+    feature_banners: { ...base.feature_banners, ...incoming.feature_banners },
+    store_settings: { ...base.store_settings, ...incoming.store_settings },
+  };
 }
 
 export const DEFAULT_SITE_IMAGES: SiteImagesConfig = {
@@ -53,6 +88,12 @@ export const DEFAULT_SITE_IMAGES: SiteImagesConfig = {
     logo_mobile_url: '/images/kawaiora-logo.png',
     cart_icon_url: '/images/cart-icon.png',
     favicon_url: '/favicon.ico',
+    navigation_items: [
+      { href: '/shop', label: 'All Hampers' },
+      { href: '/occasions', label: 'Occasions' },
+      { href: '/categories', label: 'Collections' },
+      { href: '/corporate', label: 'Corporate Gifting' },
+    ],
   },
   halloween_banner: {
     active: true,
@@ -202,5 +243,8 @@ export const DEFAULT_SITE_IMAGES: SiteImagesConfig = {
     custom_builder_image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd48?auto=format&fit=crop&w=1000&q=80',
     brand_story_image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?auto=format&fit=crop&w=1000&q=80',
     corporate_banner_image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1000&q=80',
+  },
+  store_settings: {
+    free_shipping_threshold: 1999,
   },
 };

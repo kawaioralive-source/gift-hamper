@@ -18,5 +18,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function OccasionDetailPage({ params }: Props) {
   const { slug } = await params;
-  return <ShopPageClient initialOccasion={slug} />;
+  return <ShopPageClient initialOccasion={slug} showFilters={false} />;
 }

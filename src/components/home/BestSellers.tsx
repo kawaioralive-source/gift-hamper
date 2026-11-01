@@ -81,7 +81,8 @@ const BEST_SELLERS = [
 export function BestSellers() {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
-  const [bestsellers, setBestsellers] = useState(BEST_SELLERS);
+  const [bestsellers, setBestsellers] = useState<typeof BEST_SELLERS>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/products?sort=popular&limit=4', { cache: 'no-store' })
@@ -105,7 +106,8 @@ export function BestSellers() {
           );
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const handleAdd = (e: React.MouseEvent, hamper: (typeof BEST_SELLERS)[0]) => {
@@ -156,7 +158,11 @@ export function BestSellers() {
         </div>
 
         <div className="space-y-6">
-          {bestsellers.map((hamper) => {
+          {loading ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+              Loading best sellers...
+            </div>
+          ) : bestsellers.map((hamper) => {
             const inWish = isInWishlist(hamper.id);
             const discountPct =
               hamper.originalPrice && hamper.originalPrice > hamper.price

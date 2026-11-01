@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { Badge } from '@/components/ui/Badge';
 import { useCurrency, SUPPORTED_CURRENCIES } from '@/context/CurrencyContext';
 import toast from 'react-hot-toast';
+import { FreeDeliveryThresholdEditor } from '@/components/admin/FreeDeliveryThresholdEditor';
 
 interface SettingTab {
   value: string;
@@ -306,12 +307,6 @@ export function AdminSettingsClient() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
-                    label="Free Shipping Threshold"
-                    type="number"
-                    defaultValue="999"
-                    helperText="Orders above this amount get free shipping"
-                  />
-                  <Input
                     label="Standard Shipping Rate"
                     type="number"
                     defaultValue="99"
@@ -333,6 +328,8 @@ export function AdminSettingsClient() {
               </div>
             </div>
           </Card>
+
+          <FreeDeliveryThresholdEditor />
 
           <Card variant="elevated" padding="lg">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Delivery Slots</h2>

@@ -44,6 +44,12 @@ export async function GET() {
           .eq('user_id', user.id)
           .single();
         if (userWishlist) wishlist = userWishlist;
+        else {
+          return NextResponse.json({
+            success: true,
+            data: { items: [], count: 0, source: 'account' },
+          });
+        }
       } else {
         const sessionId = cookieStore.get('session_id')?.value;
         if (sessionId) {
@@ -68,7 +74,7 @@ export async function GET() {
         if (wishlistItems) {
           return NextResponse.json({
             success: true,
-            data: { items: wishlistItems, count: wishlistItems.length },
+            data: { items: wishlistItems, count: wishlistItems.length, source: user ? 'account' : 'session' },
           });
         }
       }
@@ -79,12 +85,12 @@ export async function GET() {
     const localWishlist = getLocalCookieWishlist();
     return NextResponse.json({
       success: true,
-      data: localWishlist,
+      data: { ...localWishlist, source: 'cookie' },
     });
   } catch (error) {
     return NextResponse.json({
       success: true,
-      data: { items: [], count: 0 },
+      data: { items: [], count: 0, source: 'cookie' },
     });
   }
 }

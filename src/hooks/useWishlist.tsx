@@ -67,7 +67,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/wishlist');
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.data?.items?.length) {
+        if (data.success && Array.isArray(data.data?.items) && (data.data.items.length > 0 || data.data.source === 'account')) {
           const activeItems = (data.data.items || []).filter(
             (item: WishlistItem) => item.product?.is_active !== false
           );

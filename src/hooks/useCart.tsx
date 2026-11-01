@@ -93,7 +93,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/cart');
       if (response.ok) {
         const data = await response.json();
-        if (data.success && Array.isArray(data.data?.items) && data.data.items.length > 0) {
+        if (data.success && Array.isArray(data.data?.items) && (
+          data.data.items.length > 0 || data.data.source === 'account' || data.data.source === 'session'
+        )) {
           const { total, count } = calculateTotals(data.data.items);
           setCart({ items: data.data.items, total, count });
           setLocalCart({ items: data.data.items, total, count });

@@ -55,7 +55,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1 space-y-6">
             <Link href="/" className="inline-flex items-center group" aria-label={`${brand.brand_short_name || 'Kavayura Hampers'} Home`}>
-              <div className="h-12 px-3 py-1 bg-black rounded-xl border border-slate-800 flex items-center justify-center shadow-lg transition group-hover:scale-105">
+              <div className="h-12 px-3 py-1 bg-transparent rounded-xl flex items-center justify-center transition group-hover:scale-105">
                 <img
                   src={brand.logo_url || '/images/kawaiora-logo.png'}
                   alt={brand.brand_name || 'Kavayura Hampers'}

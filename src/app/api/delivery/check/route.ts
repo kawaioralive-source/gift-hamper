@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { DEFAULT_SITE_IMAGES, mergeSiteImagesConfig } from '@/types/site-images';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +16,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    let freeShippingThreshold = DEFAULT_SITE_IMAGES.store_settings.free_shipping_threshold;
     try {
       const supabase = createClient();
+      const { data: homeConfig } = await supabase
+        .from('homepage_config')
+        .select('site_images_data')
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (homeConfig?.site_images_data) {
+        const siteImages = mergeSiteImagesConfig(DEFAULT_SITE_IMAGES, homeConfig.site_images_data);
+        freeShippingThreshold = Math.max(1, Number(siteImages.store_settings.free_shipping_threshold) || freeShippingThreshold);
+      }
+
       const { data: zone, error } = await supabase
         .from('delivery_zones')
         .select('*')
@@ -39,7 +52,7 @@ export async function GET(request: NextRequest) {
             state: zone.state,
             estimated_days: zone.estimated_days,
             shipping_cost: zone.shipping_cost,
-            free_shipping_threshold: zone.free_shipping_threshold,
+            free_shipping_threshold: freeShippingThreshold,
           },
           estimated_delivery: deliveryBy.toISOString().split('T')[0],
         });
@@ -62,7 +75,7 @@ export async function GET(request: NextRequest) {
         state: 'India',
         estimated_days: 3,
         shipping_cost: 99,
-        free_shipping_threshold: 999,
+        free_shipping_threshold: freeShippingThreshold,
       },
       estimated_delivery: deliveryBy.toISOString().split('T')[0],
     });

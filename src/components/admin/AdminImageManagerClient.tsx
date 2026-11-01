@@ -241,7 +241,7 @@ export function AdminImageManagerClient() {
             {/* Desktop Logo */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Desktop Main Logo</label>
-              <div className="h-28 rounded-2xl bg-black border border-slate-800 flex items-center justify-center p-3 relative overflow-hidden group">
+              <div className="h-28 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-3 relative overflow-hidden group">
                 <img src={config.header.logo_url} alt="Desktop Logo Preview" className="max-h-full max-w-full object-contain" />
               </div>
               <input
@@ -261,7 +261,7 @@ export function AdminImageManagerClient() {
             {/* Mobile Logo */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Mobile Logo</label>
-              <div className="h-28 rounded-2xl bg-black border border-slate-800 flex items-center justify-center p-3 relative overflow-hidden group">
+              <div className="h-28 rounded-2xl bg-white border border-slate-200 flex items-center justify-center p-3 relative overflow-hidden group">
                 <img src={config.header.logo_mobile_url} alt="Mobile Logo Preview" className="max-h-full max-w-full object-contain" />
               </div>
               <input
@@ -316,6 +316,83 @@ export function AdminImageManagerClient() {
                 placeholder="https://..."
                 className="w-full text-xs px-3 py-2 rounded-xl border bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/30"
               />
+            </div>
+          </div>
+
+          <div className="mt-7 border-t border-slate-200 dark:border-slate-800 pt-5">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Navigation links</h3>
+                <p className="text-xs text-slate-500 mt-1">These saved links appear in both the desktop navigation and the mobile menu.</p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                leftIcon={<Plus className="w-4 h-4" />}
+                onClick={() => setConfig((prev) => ({
+                  ...prev,
+                  header: {
+                    ...prev.header,
+                    navigation_items: [...prev.header.navigation_items, { href: '/shop', label: 'New link' }],
+                  },
+                }))}
+              >
+                Add link
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {config.header.navigation_items.map((item, index) => (
+                <div key={`${index}-${item.href}`} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+                  <input
+                    type="text"
+                    value={item.label}
+                    onChange={(e) => setConfig((prev) => ({
+                      ...prev,
+                      header: {
+                        ...prev.header,
+                        navigation_items: prev.header.navigation_items.map((entry, entryIndex) =>
+                          entryIndex === index ? { ...entry, label: e.target.value } : entry
+                        ),
+                      },
+                    }))}
+                    aria-label={`Navigation label ${index + 1}`}
+                    placeholder="Link label"
+                    className="w-full text-xs px-3 py-2 rounded-xl border bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/30"
+                  />
+                  <input
+                    type="text"
+                    value={item.href}
+                    onChange={(e) => setConfig((prev) => ({
+                      ...prev,
+                      header: {
+                        ...prev.header,
+                        navigation_items: prev.header.navigation_items.map((entry, entryIndex) =>
+                          entryIndex === index ? { ...entry, href: e.target.value } : entry
+                        ),
+                      },
+                    }))}
+                    aria-label={`Navigation URL ${index + 1}`}
+                    placeholder="/shop or https://..."
+                    className="w-full text-xs px-3 py-2 rounded-xl border bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/30"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Remove navigation link ${index + 1}`}
+                    onClick={() => setConfig((prev) => ({
+                      ...prev,
+                      header: {
+                        ...prev.header,
+                        navigation_items: prev.header.navigation_items.filter((_, entryIndex) => entryIndex !== index),
+                      },
+                    }))}
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-500" />
+                  </Button>
+                </div>
+              ))}
             </div>
           </div>
         </Card>

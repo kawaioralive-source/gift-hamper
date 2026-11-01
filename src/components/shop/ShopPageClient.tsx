@@ -128,12 +128,14 @@ interface ShopPageClientProps {
   initialCategory?: string;
   initialOccasion?: string;
   initialTitle?: string;
+  showFilters?: boolean;
 }
 
 export function ShopPageClient({
   initialCategory = '',
   initialOccasion = '',
   initialTitle,
+  showFilters = true,
 }: ShopPageClientProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -560,7 +562,7 @@ export function ShopPageClient({
 
             {/* Mobile Filter Trigger & View Mode Switcher */}
             <div className="flex items-center gap-2 self-start md:self-auto">
-              <button
+              {showFilters && <button
                 type="button"
                 onClick={() => setFiltersOpen(true)}
                 className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl border border-rose-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white shadow-sm"
@@ -572,7 +574,7 @@ export function ShopPageClient({
                     {activeFilters.length}
                   </span>
                 )}
-              </button>
+              </button>}
 
               <div className="hidden lg:flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
                 <button
@@ -606,7 +608,7 @@ export function ShopPageClient({
           </div>
 
           {/* Active Filter Chips */}
-          {activeFilters.length > 0 && (
+          {showFilters && activeFilters.length > 0 && (
             <div className="mt-5 pt-4 border-t border-rose-100/60 dark:border-slate-800 flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-slate-400">Active Filters:</span>
               {activeFilters.map((af) => (
@@ -642,7 +644,7 @@ export function ShopPageClient({
       <div className="container-custom py-8 sm:py-12">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Desktop Filter Sidebar (hidden on mobile) */}
-          <aside className="hidden lg:block w-72 shrink-0">
+          {showFilters && <aside className="hidden lg:block w-72 shrink-0">
             <div className="sticky top-28 bg-white dark:bg-slate-900 rounded-3xl border border-rose-100 dark:border-slate-800 p-6 shadow-sm space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-rose-100 dark:border-slate-800">
                 <div className="flex items-center gap-2">
@@ -664,7 +666,7 @@ export function ShopPageClient({
 
               {renderFilterControls()}
             </div>
-          </aside>
+          </aside>}
 
           {/* Products Column */}
           <div className="flex-1 min-w-0">
@@ -794,7 +796,7 @@ export function ShopPageClient({
       </div>
 
       {/* Mobile Slide-Over Filter Drawer */}
-      {filtersOpen && (
+      {showFilters && filtersOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
           <div
             className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs"

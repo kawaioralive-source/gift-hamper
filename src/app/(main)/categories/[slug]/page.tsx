@@ -18,5 +18,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CategoryDetailPage({ params }: Props) {
   const { slug } = await params;
-  return <ShopPageClient initialCategory={slug} />;
+  return <ShopPageClient initialCategory={slug} showFilters={false} />;
 }

@@ -94,7 +94,8 @@ const FEATURED_HAMPERS = [
 export function FeaturedHampers() {
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
-  const [hampers, setHampers] = useState(FEATURED_HAMPERS);
+  const [hampers, setHampers] = useState<typeof FEATURED_HAMPERS>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/products?limit=8', { cache: 'no-store' })
@@ -118,7 +119,11 @@ export function FeaturedHampers() {
           );
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
+    // Only render products returned by the live catalog so the home page
+    // cannot add placeholder products that resolve to a different cart item.
+    // The fallback cards are intentionally not used as purchasable products.
   }, []);
 
   const handleAdd = (e: React.MouseEvent, hamper: (typeof FEATURED_HAMPERS)[0]) => {
@@ -158,7 +163,11 @@ export function FeaturedHampers() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {hampers.map((hamper) => {
+          {loading ? (
+            <div className="col-span-full rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+              Loading available hampers...
+            </div>
+          ) : hampers.map((hamper) => {
             const inWish = isInWishlist(hamper.id);
             const discountPct =
               hamper.originalPrice && hamper.originalPrice > hamper.price

@@ -12,6 +12,7 @@ import { FaqSection } from '@/components/home/FaqSection';
 import { StoryHighlights } from '@/components/home/StoryHighlights';
 import { TrustBenefitsBar } from '@/components/home/TrustBenefitsBar';
 import { ShopByMood } from '@/components/home/ShopByMood';
+import { useSiteImages } from '@/context/SiteImagesContext';
 
 interface DynamicHomepageProps {
   initialConfig?: {
@@ -37,6 +38,7 @@ const DEFAULT_ORDER = [
 ];
 
 export function DynamicHomepage({ initialConfig }: DynamicHomepageProps) {
+  const { config: siteImages, loading: siteImagesLoading } = useSiteImages();
   const [sectionsOrder, setSectionsOrder] = useState<string[]>(
     initialConfig?.sections_order || DEFAULT_ORDER
   );
@@ -49,8 +51,13 @@ export function DynamicHomepage({ initialConfig }: DynamicHomepageProps) {
   });
 
   useEffect(() => {
+    if (siteImagesLoading) return;
+
     async function loadLayout() {
       try {
+        if (siteImages.halloween_banner.active) {
+          setPromoBanner({ active: true, text: siteImages.halloween_banner.banner_text });
+        }
         const res = await fetch('/api/homepage-editor');
         if (res.ok) {
           const json = await res.json();
@@ -68,7 +75,7 @@ export function DynamicHomepage({ initialConfig }: DynamicHomepageProps) {
                 story_highlights: json.data.sections_visibility.story_highlights ?? true,
               });
             }
-            if (json.data.promotional_banner_text) {
+            if (!siteImages.halloween_banner.active && json.data.promotional_banner_text) {
               setPromoBanner({
                 active: json.data.promotional_banner_active ?? true,
                 text: json.data.promotional_banner_text,
@@ -81,7 +88,7 @@ export function DynamicHomepage({ initialConfig }: DynamicHomepageProps) {
       }
     }
     loadLayout();
-  }, []);
+  }, [siteImagesLoading, siteImages.halloween_banner.active, siteImages.halloween_banner.banner_text]);
 
   const renderSection = (key: string) => {
     if (sectionsVisibility[key] === false) return null;

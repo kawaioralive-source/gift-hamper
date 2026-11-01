@@ -8,12 +8,14 @@ import { useCart } from '@/hooks/useCart';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
+import { useSiteImages } from '@/context/SiteImagesContext';
 
-const FREE_SHIPPING_THRESHOLD = 1999;
 const FREE_GIFT_THRESHOLD = 3999;
 
 export function CartDrawer() {
   const { cart, isCartDrawerOpen, closeCartDrawer, updateQuantity, removeFromCart } = useCart();
+  const { config: siteImages } = useSiteImages();
+  const freeShippingThreshold = Math.max(1, Number(siteImages.store_settings.free_shipping_threshold) || 1999);
   const router = useRouter();
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountPct: number } | null>(null);
@@ -22,9 +24,9 @@ export function CartDrawer() {
   if (!isCartDrawerOpen) return null;
 
   const currentTotal = cart.total;
-  const freeShippingUnlocked = currentTotal >= FREE_SHIPPING_THRESHOLD;
-  const shippingProgress = Math.min(100, Math.round((currentTotal / FREE_SHIPPING_THRESHOLD) * 100));
-  const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - currentTotal);
+  const freeShippingUnlocked = currentTotal >= freeShippingThreshold;
+  const shippingProgress = Math.min(100, Math.round((currentTotal / freeShippingThreshold) * 100));
+  const amountToFreeShipping = Math.max(0, freeShippingThreshold - currentTotal);
 
   const handleApplyPromo = (e: React.FormEvent) => {
     e.preventDefault();

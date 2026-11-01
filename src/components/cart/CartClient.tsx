@@ -12,11 +12,13 @@ import { Input } from '@/components/ui/Input';
 import { useCart, CartItem } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import toast from 'react-hot-toast';
+import { useSiteImages } from '@/context/SiteImagesContext';
 
 export function CartClient() {
   const router = useRouter();
   const { cart, loading, updateQuantity, removeFromCart, addToCart, clearCart, refreshCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
+  const { config: siteImages } = useSiteImages();
   const [discount, setDiscount] = useState<{ code: string; percent: number } | null>(null);
   const [savedItems, setSavedItems] = useState<any[]>([]);
 
@@ -81,7 +83,7 @@ export function CartClient() {
   }, 0);
 
   const discountAmount = discount ? Math.round((subtotal * discount.percent) / 100) : 0;
-  const freeShippingThreshold = 1999;
+  const freeShippingThreshold = Math.max(1, Number(siteImages.store_settings.free_shipping_threshold) || 1999);
   const shipping = (subtotal >= freeShippingThreshold || subtotal === 0) ? 0 : 99;
   const total = Math.max(0, subtotal - discountAmount + shipping);
   const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);

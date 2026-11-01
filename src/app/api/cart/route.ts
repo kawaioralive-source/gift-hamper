@@ -110,44 +110,49 @@ export async function GET() {
 
     try {
       let cart = null;
+      const sessionId = cookieStore.get('session_id')?.value;
       if (user) {
-        const { data: userCart } = await supabase
+        const { data: userCart, error } = await supabase
           .from('carts')
           .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
-        if (userCart) cart = userCart;
-      } else {
-        const sessionId = cookieStore.get('session_id')?.value;
-        if (sessionId) {
-          const { data: sessionCart } = await supabase
-            .from('carts')
-            .select('id')
-            .eq('session_id', sessionId)
-            .maybeSingle();
-          if (sessionCart) cart = sessionCart;
-        }
+        if (error) throw error;
+        cart = userCart;
+      } else if (sessionId) {
+        const { data: sessionCart, error } = await supabase
+          .from('carts')
+          .select('id')
+          .eq('session_id', sessionId)
+          .maybeSingle();
+        if (error) throw error;
+        cart = sessionCart;
       }
 
       if (cart) {
-        const { data: rawCartItems } = await supabase
+        const { data: rawCartItems, error } = await supabase
           .from('cart_items')
           .select('*')
           .eq('cart_id', cart.id);
+        if (error) throw error;
+        const enriched = await enrichCartItems(rawCartItems || [], supabase);
+        const total = enriched.reduce((sum, item) => {
+          const price = item.custom_hamper?.total_price ?? item.product?.price ?? item.price_at_add ?? 0;
+          return sum + Number(price) * item.quantity;
+        }, 0);
+        const count = enriched.reduce((sum, item) => sum + item.quantity, 0);
 
-        if (rawCartItems && rawCartItems.length > 0) {
-          const enriched = await enrichCartItems(rawCartItems, supabase);
-          const total = enriched.reduce((sum, item) => {
-            const price = item.custom_hamper?.total_price ?? item.product?.price ?? item.price_at_add ?? 0;
-            return sum + Number(price) * item.quantity;
-          }, 0);
-          const count = enriched.reduce((sum, item) => sum + item.quantity, 0);
+        return NextResponse.json({
+          success: true,
+          data: { items: enriched, total, count, source: user ? 'account' : 'session' },
+        });
+      }
 
-          return NextResponse.json({
-            success: true,
-            data: { items: enriched, total, count },
-          });
-        }
+      if (user) {
+        return NextResponse.json({
+          success: true,
+          data: { items: [], total: 0, count: 0, source: 'account' },
+        });
       }
     } catch (e) {
       console.warn('Supabase cart GET warning:', e);
@@ -156,7 +161,7 @@ export async function GET() {
     const localCart = getLocalCookieCart();
     return NextResponse.json({
       success: true,
-      data: localCart,
+      data: { ...localCart, source: 'cookie' },
     });
   } catch (error) {
     console.error('Cart GET error:', error);
@@ -188,9 +193,40 @@ export async function POST(request: NextRequest) {
     const supabase = createClient();
     let finalItems: any[] = [];
     let sessionIdToSet: string | null = null;
+    let resolvedProduct: any = null;
+    let productLookupFailed = false;
+
+    if (productId) {
+      try {
+        let productQuery = supabase.from('products').select('*');
+        const productSlug = String(providedProduct?.slug || '').trim();
+        const numericId = Number(productId);
+        if (productSlug) {
+          productQuery = productQuery.eq('slug', productSlug);
+        } else if (Number.isFinite(numericId)) {
+          productQuery = productQuery.eq('id', numericId);
+        } else {
+          productQuery = productQuery.eq('slug', String(productId));
+        }
+        const { data, error } = await productQuery.maybeSingle();
+        if (error) throw error;
+        resolvedProduct = data;
+      } catch (error) {
+        productLookupFailed = true;
+        console.warn('Could not resolve cart product before save:', error);
+      }
+
+      if (!resolvedProduct && !productLookupFailed) {
+        return NextResponse.json(
+          { success: false, error: 'This product is no longer available. Refresh the page and try again.' },
+          { status: 404 }
+        );
+      }
+    }
 
     // 1. Try Supabase Cart Persistence
     try {
+      if (productId && !resolvedProduct) throw new Error('Product lookup unavailable; using cart fallback.');
       let cart = null;
       if (user) {
         const { data: userCart } = await supabase
@@ -234,27 +270,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (cart) {
-        let validProductId: number | null = null;
-        let priceAtAdd = Number(body.price) || (providedProduct?.price ? Number(providedProduct.price) : 0);
-
-        if (productId) {
-          const numId = Number(productId);
-          let pQuery = supabase.from('products').select('*');
-          if (!isNaN(numId)) {
-            pQuery = pQuery.eq('id', numId);
-          } else {
-            pQuery = pQuery.eq('slug', productId);
-          }
-          const { data: product } = await pQuery.maybeSingle();
-          if (product) {
-            validProductId = product.id;
-            if (product.price != null) priceAtAdd = Number(product.price);
-          }
-        }
+      if (cart && (!productId || resolvedProduct)) {
+        const validProductId = resolvedProduct?.id ?? null;
+        const priceAtAdd = resolvedProduct?.price != null
+          ? Number(resolvedProduct.price)
+          : Number(body.price) || (providedProduct?.price ? Number(providedProduct.price) : 0);
 
         let existingItem = null;
-        if (validProductId) {
+        if (validProductId !== null) {
           const { data } = await supabase
             .from('cart_items')
             .select('id, quantity')

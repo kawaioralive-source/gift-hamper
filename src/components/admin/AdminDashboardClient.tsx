@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { FreeDeliveryThresholdEditor } from '@/components/admin/FreeDeliveryThresholdEditor';
 
 interface AdminStats {
   total_revenue: number;
@@ -140,6 +141,8 @@ export function AdminDashboardClient() {
           <StatCard key={stat.label} {...stat} />
         ))}
       </div>
+
+      <FreeDeliveryThresholdEditor />
 
       {/* Charts & Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

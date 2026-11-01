@@ -598,7 +598,7 @@ export function AdminBrandClient() {
                 {/* Header Navbar simulation */}
                 <div className="p-3 flex items-center justify-between border-b border-slate-200/40 dark:border-slate-800">
                   <div className="flex items-center gap-2">
-                    <div className="h-10 px-2 py-0.5 bg-black rounded-lg border border-slate-800 flex items-center justify-center">
+                    <div className="h-10 px-2 py-0.5 bg-transparent rounded-lg flex items-center justify-center">
                       <img
                         src={form.logo_url || '/images/kawaiora-logo.png'}
                         alt={form.brand_name}

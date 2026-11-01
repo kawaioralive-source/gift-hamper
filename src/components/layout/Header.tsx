@@ -21,6 +21,7 @@ import {
   Layers,
   Calendar,
   CheckCircle2,
+  ChevronRight,
 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
@@ -28,13 +29,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useBrand } from '@/hooks/useBrand';
-
-const NAV_ITEMS = [
-  { href: '/shop', label: 'All Hampers' },
-  { href: '/occasions', label: 'Occasions' },
-  { href: '/categories', label: 'Collections' },
-  { href: '/corporate', label: 'Corporate Gifting' },
-];
+import { useSiteImages } from '@/context/SiteImagesContext';
 
 const POPULAR_SEARCH_TAGS = [
   '🎃 Halloween Hampers',
@@ -64,7 +59,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ id?: string; name: string; email: string; role: string } | null>(null);
   const [mounted, setMounted] = useState(false);
   const [activePromo, setActivePromo] = useState<{ code: string; percentage: number; description?: string } | null>(null);
   const [announcementDismissed, setAnnouncementDismissed] = useState(false);
@@ -82,6 +77,17 @@ export function Header() {
   const { cart, openCartDrawer } = useCart();
   const { wishlist } = useWishlist();
   const { brand } = useBrand();
+  const { config: siteImages } = useSiteImages();
+  const navigationItems = siteImages.header.navigation_items.filter((item) => item.label.trim() && item.href.trim());
+  const announcementText = siteImages.halloween_banner.active
+    ? siteImages.halloween_banner.banner_text
+    : activePromo?.description || '';
+  const announcementCode = siteImages.halloween_banner.active
+    ? siteImages.halloween_banner.banner_code
+    : activePromo?.code || '';
+  const announcementDiscount = siteImages.halloween_banner.active
+    ? siteImages.halloween_banner.banner_discount
+    : activePromo?.percentage ? `${activePromo.percentage}% OFF` : '';
 
   // Scroll detection for header backdrop styling
   useEffect(() => {
@@ -276,7 +282,7 @@ export function Header() {
       )}
     >
       {/* 1. TOP PROMOTIONAL ANNOUNCEMENT BAR (Continuous Loop Marquee Moving Right) */}
-      {!announcementDismissed && (
+      {!announcementDismissed && Boolean(announcementText) && (
         <div className="relative bg-gradient-to-r from-purple-950 via-slate-900 via-orange-950 to-purple-950 border-b border-orange-500/20 text-white text-[11px] sm:text-xs py-2 px-2 font-medium tracking-wide shadow-inner overflow-hidden">
           <div className="w-full mx-auto flex items-center justify-between gap-2">
             <div className="flex-1 overflow-hidden min-w-0">
@@ -289,22 +295,10 @@ export function Header() {
                 className="w-full flex items-center gap-6 font-semibold tracking-wide cursor-default"
               >
                 <span className="inline-flex items-center gap-6">
-                  <span>
-                    🎃 <strong>HALLOWEEN SPOOKTACULAR SALE</strong> • Limited Edition <strong>Kawaiora Hampers</strong> • Use Code:{' '}
-                    <strong className="text-orange-300 font-bold tracking-wider uppercase bg-white/10 px-2 py-0.5 rounded border border-orange-400/30">
-                      SPOOKY20
-                    </strong>{' '}
-                    (20% Off) 🦇
-                  </span>
-                  <span>✨ 100% Handcrafted Luxury Keepsake Boxes & Satin Ribbons</span>
-                  <span>🚚 Pan-India Express Delivery With Live Tracking</span>
-                  <span>📜 Free Textured Handwritten Greeting Card in Wax-Sealed Envelope</span>
-                  <span>
-                    🎃 Welcome to <strong>Kawaiora Hampers</strong> • Use Code:{' '}
-                    <strong className="text-orange-300 font-bold tracking-wider uppercase bg-white/10 px-2 py-0.5 rounded border border-orange-400/30">
-                      WELCOME10
-                    </strong>{' '}
-                    (10% Off) 🎁
+                  <span className="inline-flex items-center gap-2">
+                    {announcementText}
+                    {announcementCode && <strong className="text-orange-300 font-bold tracking-wider uppercase bg-white/10 px-2 py-0.5 rounded border border-orange-400/30">{announcementCode}</strong>}
+                    {announcementDiscount && <strong>{announcementDiscount}</strong>}
                   </span>
                 </span>
               {/* @ts-ignore */}
@@ -335,7 +329,7 @@ export function Header() {
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation-menu"
             >
-              <Menu className="w-6 h-6" />
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
 
             {/* Brand Logo */}
@@ -344,19 +338,22 @@ export function Header() {
               className="flex items-center shrink-0 group"
               aria-label={`${brand.brand_short_name || 'Kavayura Hampers'} Home`}
             >
-              <div className="h-12 sm:h-14 px-2.5 sm:px-3 py-1 bg-black rounded-xl sm:rounded-2xl border border-orange-500/30 flex items-center justify-center shadow-lg transition group-hover:scale-105 group-hover:border-orange-500/60 shadow-glow-halloween/20">
-                <img
-                  src={brand.logo_url || '/images/kawaiora-logo.png'}
-                  alt={brand.brand_name || 'Kavayura Hampers'}
-                  className="h-8 sm:h-10 w-auto object-contain"
-                />
+              <div className="h-12 sm:h-14 px-2.5 sm:px-3 py-1 bg-transparent rounded-xl sm:rounded-2xl flex items-center justify-center transition group-hover:scale-105">
+                <picture>
+                  <source media="(max-width: 1023px)" srcSet={siteImages.header.logo_mobile_url || siteImages.header.logo_url} />
+                  <img
+                    src={siteImages.header.logo_url || brand.logo_url || '/images/kawaiora-logo.png'}
+                    alt={brand.brand_name || 'Kavayura Hampers'}
+                    className="h-8 sm:h-10 w-auto object-contain"
+                  />
+                </picture>
               </div>
             </Link>
           </div>
 
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center gap-6 xl:gap-8 shrink-0">
-            {NAV_ITEMS.map((item) => (
+            {navigationItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -524,7 +521,7 @@ export function Header() {
               aria-label={`Shopping cart (${cartCount})`}
             >
               <div className="w-6 h-6 rounded-lg overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform">
-                <img src="/images/cart-icon.png" alt="Cart" className="w-full h-full object-contain" />
+                <img src={siteImages.header.cart_icon_url} alt="Cart" className="w-full h-full object-contain" />
               </div>
               <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white flex items-center justify-center text-[10px] font-bold shadow-md shadow-orange-500/40">
                 {cartCount}
@@ -727,9 +724,9 @@ export function Header() {
             {/* Drawer Header */}
             <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pt-[calc(env(safe-area-inset-top,0px)+1rem)]">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
-                <div className="h-10 px-2.5 py-1 bg-black rounded-xl border border-slate-900 flex items-center justify-center shadow-md">
+                <div className="h-10 px-2.5 py-1 bg-transparent rounded-xl flex items-center justify-center">
                   <img
-                    src={brand.logo_url || '/images/kawaiora-logo.png'}
+                    src={siteImages.header.logo_mobile_url || siteImages.header.logo_url || brand.logo_url || '/images/kawaiora-logo.png'}
                     alt={brand.brand_name || 'Kavayura Hampers'}
                     className="h-7 w-auto object-contain"
                   />
@@ -768,61 +765,31 @@ export function Header() {
 
             {/* Navigation Links */}
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
-              <Link
-                href="/shop"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition',
-                  isActive('/shop')
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'
-                )}
-              >
-                <Gift className="w-4 h-4 text-amber-500" />
-                <span>All Gift Hampers</span>
-              </Link>
-
-              <Link
-                href="/occasions"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition',
-                  isActive('/occasions')
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'
-                )}
-              >
-                <Calendar className="w-4 h-4 text-rose-500" />
-                <span>Shop by Occasion</span>
-              </Link>
-
-              <Link
-                href="/categories"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition',
-                  isActive('/categories')
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'
-                )}
-              >
-                <Layers className="w-4 h-4 text-indigo-500" />
-                <span>Collections & Themes</span>
-              </Link>
-
-              <Link
-                href="/corporate"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition',
-                  isActive('/corporate')
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'
-                )}
-              >
-                <Package className="w-4 h-4 text-emerald-500" />
-                <span>Corporate & Bulk Gifting</span>
-              </Link>
+              {navigationItems.map((item) => {
+                const Icon = item.href.includes('occasion')
+                  ? Calendar
+                  : item.href.includes('categor')
+                    ? Layers
+                    : item.href.includes('corporate')
+                      ? Package
+                      : Gift;
+                return (
+                  <Link
+                    key={`${item.href}-${item.label}`}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition',
+                      isActive(item.href)
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'
+                    )}
+                  >
+                    <span className="flex items-center gap-3"><Icon className="w-4 h-4 text-amber-500" />{item.label}</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </Link>
+                );
+              })}
 
               <Link
                 href="/orders"
@@ -890,6 +857,8 @@ export function Header() {
                     <span className="text-[11px] font-medium text-slate-500">Signed in as</span>
                     <span className="text-xs font-bold text-amber-600 truncate max-w-[140px]">{user.name}</span>
                   </div>
+                  <p className="px-1 text-[11px] text-slate-500 truncate">{user.email}</p>
+                  <p className="px-1 text-[10px] text-slate-400 break-all">User ID: {user.id || 'Unavailable'}</p>
                   {user.role === 'admin' && (
                     <Link
                       href="/admin"

@@ -101,7 +101,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Logo */}
         <div className={cn('flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-800 flex-shrink-0', collapsed && 'justify-center')}>
           <Link href="/admin" className="flex items-center gap-2">
-            <div className="h-10 px-2 py-0.5 bg-black rounded-lg border border-slate-900 flex items-center justify-center shadow">
+            <div className="h-10 px-2 py-0.5 bg-transparent rounded-lg flex items-center justify-center">
               <img
                 src={brand.logo_url || '/images/kawaiora-logo.png'}
                 alt={brand.brand_short_name || 'KawaiOra'}

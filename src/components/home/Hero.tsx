@@ -9,7 +9,21 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import toast from 'react-hot-toast';
 
-const DEFAULT_HALLOWEEN_SLIDES = [
+interface HeroSlide {
+  id: string;
+  title: string;
+  category: string;
+  tag: string;
+  price: number;
+  originalPrice: number;
+  rating: number;
+  slug: string;
+  image: string;
+  description: string;
+  productId?: string;
+}
+
+const DEFAULT_HALLOWEEN_SLIDES: HeroSlide[] = [
   {
     id: '1',
     title: '🎃 The Midnight Masquerade Crate',
@@ -63,7 +77,6 @@ const DEFAULT_HALLOWEEN_SLIDES = [
 export function Hero() {
   const [slides, setSlides] = useState(DEFAULT_HALLOWEEN_SLIDES);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const { addToCart } = useCart();
   const [heroConfig, setHeroConfig] = useState({
     headline: '🎃 Hauntingly Exquisite\nArtisan Hampers',
@@ -78,32 +91,61 @@ export function Hero() {
   useEffect(() => {
     async function loadConfig() {
       try {
-        const [homeRes, imagesRes] = await Promise.all([
+        const [homeRes, imagesRes, productsRes] = await Promise.all([
           fetch('/api/homepage-editor'),
           fetch('/api/admin/site-images'),
+          fetch('/api/products?limit=50'),
         ]);
 
+        let halloweenThemeActive = true;
+        let savedHeroSlides: any[] = [];
         if (imagesRes.ok) {
           const imgJson = await imagesRes.json();
-          if (imgJson.success && Array.isArray(imgJson.data?.hero_slides) && imgJson.data.hero_slides.length > 0) {
-            setSlides(
-              imgJson.data.hero_slides.map((s: any) => ({
-                id: s.id,
-                title: s.title,
-                category: 'Halloween Edition',
-                tag: s.tag,
-                price: s.price,
-                originalPrice: s.original_price,
-                rating: 4.9,
-                slug: s.slug || 'grand-royal-celebration',
-                image: s.image_url,
-                description: s.description,
-              }))
-            );
+          halloweenThemeActive = imgJson.data?.halloween_banner?.active === true;
+          if (imgJson.success && Array.isArray(imgJson.data?.hero_slides)) savedHeroSlides = imgJson.data.hero_slides;
+        }
+
+        if (productsRes.ok) {
+          const productsJson = await productsRes.json();
+          if (productsJson.success && Array.isArray(productsJson.data) && productsJson.data.length > 0) {
+            const orderedProducts = [
+              ...savedHeroSlides
+                .map((slide) => productsJson.data.find((product: any) => product.slug === slide.slug))
+                .filter(Boolean),
+              ...productsJson.data.filter((product: any) => !savedHeroSlides.some((slide) => slide.slug === product.slug)),
+            ];
+            const seenProductIds = new Set<string>();
+            const liveSlides: HeroSlide[] = orderedProducts
+              .filter((product: any) => {
+                const id = String(product.id);
+                if (seenProductIds.has(id)) return false;
+                seenProductIds.add(id);
+                return true;
+              })
+              .map((product: any, index: number) => {
+                const savedSlide = savedHeroSlides.find((slide) => slide.slug === product.slug);
+                return {
+                  id: String(product.id),
+                  productId: String(product.id),
+                  title: product.name,
+                  category: 'Halloween Special',
+                  tag: savedSlide?.tag || (index === 0 ? '🎃 Featured' : 'Curated Gift'),
+                  price: Number(product.price) || 0,
+                  originalPrice: Number(product.compare_at_price) || 0,
+                  rating: Number(product.rating) || 4.9,
+                  slug: product.slug,
+                  image: product.images?.[0] || product.image || DEFAULT_HALLOWEEN_SLIDES[index % DEFAULT_HALLOWEEN_SLIDES.length].image,
+                  description: product.short_description || product.description || '',
+                };
+              });
+            setSlides(liveSlides);
+            setCurrentSlide(0);
           }
         }
 
-        if (homeRes.ok) {
+        // The Halloween design owns the hero copy while it is enabled. The
+        // homepage editor should only replace it after that theme is turned off.
+        if (!halloweenThemeActive && homeRes.ok) {
           const json = await homeRes.json();
           if (json.success && json.data) {
             setHeroConfig((prev) => ({
@@ -123,17 +165,6 @@ export function Hero() {
     loadConfig();
   }, []);
 
-  useEffect(() => {
-    if (isPaused) return;
-    const interval = setInterval(() => {
-      setSlides((current) => {
-        setCurrentSlide((prev) => (prev + 1) % current.length);
-        return current;
-      });
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [isPaused]);
-
   const active = slides[currentSlide] || DEFAULT_HALLOWEEN_SLIDES[0];
 
   const handlePrev = () => {
@@ -147,8 +178,9 @@ export function Hero() {
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(active.slug || active.id, undefined, 1, {
-      id: active.id,
+    if (!active.productId) return;
+    addToCart(active.productId, undefined, 1, {
+      id: active.productId,
       name: active.title,
       slug: active.slug,
       price: active.price,
@@ -214,8 +246,6 @@ export function Hero() {
           {/* Right: Interactive Showcase Slider */}
           <div
             className="lg:col-span-5 relative"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
           >
             {/* Floating Top Accent Icon */}
             <div className="absolute -top-5 -right-3 z-30 w-24 sm:w-28 p-1.5 bg-slate-950 dark:bg-slate-100 rounded-2xl border-2 border-white/90 dark:border-slate-900/90 shadow-2xl rotate-6 hover:rotate-0 transition-transform duration-300">
@@ -286,21 +316,21 @@ export function Hero() {
                   <div className="text-sm font-bold text-white truncate">{active.title}</div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-amber-400 font-extrabold text-base">{formatCurrency(active.price)}</span>
-                    <span className="text-slate-400 text-xs line-through">{formatCurrency(active.originalPrice)}</span>
+                    {active.originalPrice > active.price && <span className="text-slate-400 text-xs line-through">{formatCurrency(active.originalPrice)}</span>}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
+                  {active.productId && <button
                     type="button"
                     onClick={handleQuickAdd}
                     className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500 hover:text-slate-950 transition"
                     title="Quick Add to Cart"
-                    aria-label="Quick Add"
+                    aria-label={`Add ${active.title} to cart`}
                   >
                     <ShoppingBag className="w-4 h-4" />
-                  </button>
-                  <Link href={`/products/${active.slug}`}>
+                  </button>}
+                  <Link href={active.productId ? `/products/${active.slug}` : '/shop'}>
                     <Button variant="rose" size="sm">
                       View Box
                     </Button>

@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { ShopPageClient } from '@/components/shop/ShopPageClient';
+import { WishlistPageClient } from '@/components/wishlist/WishlistPageClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function WishlistPage() {
-  return <ShopPageClient />;
+  return <WishlistPageClient />;
 }
