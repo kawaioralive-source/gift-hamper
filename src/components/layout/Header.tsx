@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -703,7 +704,7 @@ export function Header() {
       )}
 
       {/* 4. SALTY-INSPIRED MOBILE NAVIGATION DRAWER (Off-canvas) */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen && typeof document !== 'undefined' && createPortal((
         <div className="fixed inset-0 z-[70] lg:hidden">
           {/* Backdrop overlay */}
           <button
@@ -890,7 +891,7 @@ export function Header() {
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </header>
   );
 }
