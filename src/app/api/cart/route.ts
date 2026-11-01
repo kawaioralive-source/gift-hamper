@@ -187,6 +187,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient();
     let finalItems: any[] = [];
+    let sessionIdToSet: string | null = null;
 
     // 1. Try Supabase Cart Persistence
     try {
@@ -212,6 +213,7 @@ export async function POST(request: NextRequest) {
         let sessionId = cookieStore.get('session_id')?.value;
         if (!sessionId) {
           sessionId = uuidv4();
+          sessionIdToSet = sessionId;
         }
 
         const { data: sessionCart } = await supabase
@@ -357,6 +359,15 @@ export async function POST(request: NextRequest) {
       data: { items: finalItems, total, count },
     });
 
+    if (sessionIdToSet) {
+      response.cookies.set('session_id', sessionIdToSet, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24 * 30,
+        path: '/',
+      });
+    }
     saveLocalCookieCart(response, finalItems);
     return response;
   } catch (error) {

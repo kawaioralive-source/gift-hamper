@@ -182,6 +182,25 @@ export function Header() {
     setIsSearchFocused(false);
   }, [pathname]);
 
+  // Keep the page from scrolling behind the mobile drawer and support the
+  // expected Escape key behavior while it is open.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
   // Click outside search popover to close
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -309,9 +328,12 @@ export function Header() {
           {/* Left: Mobile Menu Hamburger & Logo */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setMobileMenuOpen(true)}
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
               className="lg:hidden p-2 rounded-xl text-slate-200 hover:bg-slate-800 transition"
-              aria-label="Open mobile navigation menu"
+              aria-label={mobileMenuOpen ? 'Close mobile navigation menu' : 'Open mobile navigation menu'}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-menu"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -485,7 +507,7 @@ export function Header() {
             {/* Wishlist Icon */}
             <Link
               href="/wishlist"
-              className="relative p-2.5 rounded-xl bg-slate-900 border border-purple-500/30 hover:border-purple-400 text-purple-400 hover:text-purple-300 transition shadow-glow-purple/20"
+              className="hidden lg:inline-flex relative p-2.5 rounded-xl bg-slate-900 border border-purple-500/30 hover:border-purple-400 text-purple-400 hover:text-purple-300 transition shadow-glow-purple/20"
               aria-label={`Wishlist (${wishlistCount})`}
             >
               <Heart className="w-5 h-5" />
@@ -496,8 +518,9 @@ export function Header() {
 
             {/* Cart Icon (Opens Slide-out Cart Drawer) */}
             <button
+              type="button"
               onClick={openCartDrawer}
-              className="relative p-2 rounded-xl bg-slate-900 border border-orange-500/30 hover:border-orange-400 text-slate-200 transition flex items-center justify-center group shadow-glow-halloween/20"
+              className="hidden lg:flex relative p-2 rounded-xl bg-slate-900 border border-orange-500/30 hover:border-orange-400 text-slate-200 transition items-center justify-center group shadow-glow-halloween/20"
               aria-label={`Shopping cart (${cartCount})`}
             >
               <div className="w-6 h-6 rounded-lg overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -684,15 +707,23 @@ export function Header() {
 
       {/* 4. SALTY-INSPIRED MOBILE NAVIGATION DRAWER (Off-canvas) */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[70] lg:hidden">
           {/* Backdrop overlay */}
-          <div
+          <button
+            type="button"
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity animate-in fade-in"
             onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close navigation menu"
           />
 
           {/* Drawer container */}
-          <div className="fixed inset-y-0 left-0 max-w-xs w-full bg-white dark:bg-slate-950 shadow-2xl flex flex-col z-50 animate-in slide-in-from-left duration-200">
+          <div
+            id="mobile-navigation-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
+            className="fixed inset-y-0 left-0 max-w-xs w-full bg-white dark:bg-slate-950 shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200"
+          >
             {/* Drawer Header */}
             <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pt-[calc(env(safe-area-inset-top,0px)+1rem)]">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
